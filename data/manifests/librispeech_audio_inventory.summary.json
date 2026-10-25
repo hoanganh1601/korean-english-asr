@@ -1,0 +1,24 @@
+{
+  "codecs": {
+    "flac": 33862
+  },
+  "created_utc": "2026-10-25T01:38:19.553625+00:00",
+  "duplicate_files_by_checksum": 0,
+  "error_files": 0,
+  "extensions": {
+    ".flac": 33862
+  },
+  "ok_files": 33862,
+  "raw_dir": "/media/icnlab/Data/hoanganh/datasets/librispeech/LibriSpeech",
+  "sample_rates": {
+    "16000": 33862
+  },
+  "sources": {
+    "dev-clean": 2703,
+    "test-clean": 2620,
+    "train-clean-100": 28539
+  },
+  "total_duration_hours": 111.382158,
+  "total_files": 33862,
+  "workers": 19
+}

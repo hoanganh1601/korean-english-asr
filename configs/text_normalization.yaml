@@ -1,0 +1,28 @@
+schema_version: 1
+policy_version: ko_en_text_v1
+
+training_text:
+  unicode_normalization: NFC
+  collapse_whitespace: true
+  lowercase_latin: false
+  remove_punctuation: false
+  preserve_hangul: true
+  preserve_latin: true
+  number_policy: preserve_source_surface_form
+  automatic_spelling_correction: false
+  automatic_teacher_replacement: false
+
+evaluation:
+  wer:
+    unicode_normalization: NFC
+    collapse_whitespace: true
+    remove_punctuation: true
+  cer:
+    unicode_normalization: NFC
+    collapse_whitespace: true
+    remove_punctuation: true
+    remove_whitespace: true
+
+audit:
+  preserve_original_text: true
+  require_reason_for_correction: true

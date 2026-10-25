@@ -1,0 +1,70 @@
+{
+  "code_switch": {
+    "evaluation_manifest": "artifacts/manifests/hike_v1.test.jsonl",
+    "evaluation_status": "ready",
+    "evaluation_utterances": 1121,
+    "genuine_training_data_available": false,
+    "metrics": [
+      "MER",
+      "PIER",
+      "WER",
+      "CER"
+    ],
+    "training_use_prohibited": true,
+    "warning": "HiKE is evaluation-only and must never be sampled by the trainer."
+  },
+  "constraints": {
+    "maximum_duration_sec": 30.0,
+    "minimum_duration_sec": 1.0,
+    "preserve_source_transcripts": true,
+    "speaker_disjoint_evaluation": true
+  },
+  "development_manifests": {
+    "en": "artifacts/manifests/librispeech_v1.dev.jsonl",
+    "ko": "artifacts/manifests/zeroth_v1.dev.jsonl"
+  },
+  "evaluation": {
+    "en_clean": "artifacts/manifests/librispeech_v1.clean_test.jsonl",
+    "en_official": "artifacts/manifests/librispeech_v1.official_test.jsonl",
+    "ko_clean": "artifacts/manifests/zeroth_v1.clean_test.jsonl",
+    "ko_en_mixed": "artifacts/manifests/hike_v1.test.jsonl",
+    "ko_official": "artifacts/manifests/zeroth_v1.official_test.jsonl"
+  },
+  "manifest_format": "slim_v1",
+  "mixture_version": "ko_en_v1",
+  "sampling": {
+    "duplicate_manifest_rows": false,
+    "language_probabilities": {
+      "en": 0.4,
+      "ko": 0.6
+    },
+    "strategy": "choose_language_then_uniform_utterance",
+    "with_replacement": true
+  },
+  "schema_version": 1,
+  "train": {
+    "duration_hours_by_language": {
+      "en": 100.59088,
+      "ko": 45.695823
+    },
+    "speakers_by_language": {
+      "en": 251,
+      "ko": 95
+    },
+    "total_duration_hours": 146.286703,
+    "total_utterances": 48190,
+    "utterances_by_language": {
+      "en": 28539,
+      "ko": 19651
+    }
+  },
+  "train_manifests": {
+    "en": "artifacts/manifests/librispeech_v1.train.jsonl",
+    "ko": "artifacts/manifests/zeroth_v1.train.jsonl"
+  },
+  "warnings": [
+    "Do not train by uniformly shuffling the combined manifest.",
+    "Trainer must sample languages using ko=0.60 and en=0.40.",
+    "HiKE is evaluation-only and must never enter a training batch."
+  ]
+}

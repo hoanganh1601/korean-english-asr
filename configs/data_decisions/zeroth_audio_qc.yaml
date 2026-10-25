@@ -1,0 +1,7 @@
+schema_version: 1
+decisions:
+  - id: zeroth_210_003_2947
+    decision: quarantine
+    reason: manual_no_speech
+    reviewed_date: "2026-10-24"
+    notes: Human listener reported noise only and no human speech.

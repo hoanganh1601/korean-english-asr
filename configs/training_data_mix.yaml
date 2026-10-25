@@ -1,0 +1,43 @@
+schema_version: 1
+mix_version: ko_en_v1
+random_seed: 42
+objective:
+  primary: korean_clean_wer_below_3_percent
+  secondary: preserve_english_asr_quality
+train_manifests:
+  ko: artifacts/manifests/zeroth_v1.train.jsonl
+  en: artifacts/manifests/librispeech_v1.train.jsonl
+sampling:
+  strategy: choose_language_then_uniform_utterance
+  with_replacement: true
+  duplicate_manifest_rows: false
+  language_probabilities:
+    ko: 0.6
+    en: 0.4
+development_manifests:
+  ko: artifacts/manifests/zeroth_v1.dev.jsonl
+  en: artifacts/manifests/librispeech_v1.dev.jsonl
+test_manifests:
+  ko_clean: artifacts/manifests/zeroth_v1.clean_test.jsonl
+  ko_official: artifacts/manifests/zeroth_v1.official_test.jsonl
+  en_clean: artifacts/manifests/librispeech_v1.clean_test.jsonl
+  en_official: artifacts/manifests/librispeech_v1.official_test.jsonl
+  ko_en_mixed: artifacts/manifests/hike_v1.test.jsonl
+constraints:
+  minimum_duration_sec: 1.0
+  maximum_duration_sec: 30.0
+  speaker_disjoint_evaluation: true
+  preserve_source_transcripts: true
+code_switch:
+  genuine_training_data_available: false
+  evaluation_status: ready
+  evaluation_manifest: artifacts/manifests/hike_v1.test.jsonl
+  evaluation_utterances: 1121
+  training_use_prohibited: true
+  metrics:
+  - MER
+  - PIER
+  - WER
+  - CER
+  warning: HiKE is evaluation-only and must never be sampled by the trainer.
+manifest_format: slim_v1

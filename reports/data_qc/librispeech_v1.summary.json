@@ -1,0 +1,69 @@
+{
+  "dataset_version": "librispeech_v1",
+  "language": "en",
+  "license": "CC-BY-4.0",
+  "policies": {
+    "automatic_teacher_replacement": false,
+    "duration_sec": {
+      "maximum_inclusive": 30.0,
+      "minimum_inclusive": 1.0
+    },
+    "preserve_official_dev_test": true,
+    "preserve_official_transcripts": true,
+    "speaker_disjoint": true
+  },
+  "quality_control": {
+    "dc_repaired_train_rows": 500,
+    "duration_excluded_from_dev": 9,
+    "duration_excluded_from_test": 9,
+    "manual_keep_decisions": 3,
+    "official_test_clipping_flags": 3,
+    "teacher_checked_train_rows": 543,
+    "train_acoustic_statuses": {
+      "pass": 25179,
+      "review": 3360
+    }
+  },
+  "raw_audio_modified": false,
+  "schema_version": 1,
+  "source": "librispeech",
+  "source_audio_files": 33862,
+  "source_duration_hours": 111.382158,
+  "splits": {
+    "dev": {
+      "duration_hours": 5.307592,
+      "maximum_duration_sec": 29.4,
+      "minimum_duration_sec": 1.445,
+      "speakers": 40,
+      "utterances": 2694
+    },
+    "official_dev": {
+      "duration_hours": 5.387811,
+      "maximum_duration_sec": 32.645,
+      "minimum_duration_sec": 1.445,
+      "speakers": 40,
+      "utterances": 2703
+    },
+    "official_test": {
+      "duration_hours": 5.403467,
+      "maximum_duration_sec": 34.955,
+      "minimum_duration_sec": 1.285,
+      "speakers": 40,
+      "utterances": 2620
+    },
+    "test": {
+      "duration_hours": 5.323121,
+      "maximum_duration_sec": 29.6,
+      "minimum_duration_sec": 1.285,
+      "speakers": 40,
+      "utterances": 2611
+    },
+    "train": {
+      "duration_hours": 100.59088,
+      "maximum_duration_sec": 24.525,
+      "minimum_duration_sec": 1.41,
+      "speakers": 251,
+      "utterances": 28539
+    }
+  }
+}

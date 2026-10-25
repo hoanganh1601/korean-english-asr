@@ -1,0 +1,29 @@
+{
+  "action_counts": {
+    "provisional_accept": 1311,
+    "review": 439
+  },
+  "category_counts": {
+    "both_teachers_high_disagreement_consensus": 15,
+    "both_teachers_high_disagreement_no_consensus": 20,
+    "both_teachers_moderate_disagreement_consensus": 240,
+    "number_format_teacher_consensus": 908,
+    "source_transcript_inconsistent": 51,
+    "teacher2_matches_reference": 403,
+    "teacher_predictions_ambiguous": 113
+  },
+  "input_candidates": 1750,
+  "review_priority_counts": {
+    "critical": 66,
+    "high": 133,
+    "medium": 240
+  },
+  "review_splits": {
+    "test": 11,
+    "train": 428
+  },
+  "schema_version": 1,
+  "source": "zeroth",
+  "source_texts_modified": 0,
+  "teacher_agreement_cer_threshold": 0.1
+}

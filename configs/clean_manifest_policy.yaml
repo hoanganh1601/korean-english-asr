@@ -1,0 +1,8 @@
+schema_version: 1
+policy_version: zeroth_clean_manifest_v1
+
+# Conservative first-round training: questionable labels remain recoverable in
+# a separate holdout instead of being deleted or silently corrected.
+transcript_review_action: holdout
+preserve_official_test: true
+create_curated_clean_test: true

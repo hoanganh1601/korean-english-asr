@@ -1,0 +1,72 @@
+schema_version: 1
+pipeline_version: "0.1.0"
+random_seed: 42
+
+paths:
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  manifest_dir: data/manifests
+  qc_report_dir: reports/data_qc
+  log_dir: logs
+
+audio:
+  output_format: wav
+  codec: pcm_s16le
+  sample_rate: 16000
+  channels: 1
+  sample_width_bits: 16
+
+  min_duration_sec: 1.0
+  max_duration_sec: 30.0
+
+  allowed_extensions:
+    - wav
+    - flac
+    - mp3
+    - m4a
+    - ogg
+    - opus
+    - mp4
+    - mkv
+
+  preserve_raw: true
+  loudness_normalization: false
+
+vad:
+  enabled: true
+  engine: silero
+  threshold: 0.50
+  min_speech_duration_ms: 250
+  min_silence_duration_ms: 300
+  speech_pad_ms: 150
+
+  # Chỉ bỏ silence đầu/cuối để tránh làm lệch transcript.
+  trim_edges_only: true
+
+quality:
+  reject:
+    empty_audio: true
+    decode_error: true
+    non_finite_samples: true
+    min_rms_dbfs: -55.0
+    max_clipping_fraction: 0.001
+    max_abs_dc_offset: 0.02
+
+  warn:
+    estimated_snr_below_db: 10.0
+    speech_ratio_below: 0.30
+    speech_ratio_above: 0.98
+
+  duration_policy:
+    too_short: reject
+    # Không tự cắt audio dài vì sẽ làm transcript không còn khớp.
+    too_long: quarantine
+
+processing:
+  # 0 = tự chọn max(1, CPU_count - 1).
+  workers: 0
+  chunksize: 16
+  ffmpeg_threads_per_worker: 1
+  overwrite: false
+  on_error: quarantine

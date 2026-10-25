@@ -1,0 +1,22 @@
+{
+  "codecs": {
+    "flac": 22720
+  },
+  "created_utc": "2026-10-24T12:03:55.308994+00:00",
+  "duplicate_files_by_checksum": 0,
+  "error_files": 0,
+  "extensions": {
+    ".flac": 22720
+  },
+  "ok_files": 22720,
+  "raw_dir": "/media/icnlab/Data/hoanganh/korean-english-asr/data/raw",
+  "sample_rates": {
+    "16000": 22720
+  },
+  "sources": {
+    "zeroth": 22720
+  },
+  "total_duration_hours": 52.870602,
+  "total_files": 22720,
+  "workers": 19
+}

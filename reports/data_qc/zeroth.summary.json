@@ -1,0 +1,41 @@
+{
+  "accepted_duration_hours": 52.870602,
+  "accepted_utterances": 22720,
+  "cross_split_text_overlap": {
+    "test_rows_seen_in_train": 456,
+    "test_rows_seen_in_train_pct": 99.781182,
+    "unique_test_texts": 423,
+    "unique_texts_in_both": 422,
+    "unique_train_texts": 3003
+  },
+  "duration_policy_sec": {
+    "maximum_inclusive": 30.0,
+    "minimum_inclusive": 1.0
+  },
+  "duration_sec": {
+    "maximum": 20.66575,
+    "mean": 8.377384,
+    "median": 7.943126,
+    "minimum": 3.303938,
+    "p01": 4.363539,
+    "p99": 15.683349
+  },
+  "quarantine_reasons": {},
+  "quarantined_utterances": 0,
+  "schema_version": 1,
+  "source": "zeroth",
+  "source_splits": {
+    "test": 457,
+    "train": 22263
+  },
+  "speaker_gender": {
+    "f": 70,
+    "m": 45
+  },
+  "speakers": 115,
+  "speakers_by_split": {
+    "test": 10,
+    "train": 105
+  },
+  "total_utterances": 22720
+}

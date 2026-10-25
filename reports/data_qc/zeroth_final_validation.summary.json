@@ -1,0 +1,72 @@
+{
+  "curated_test_is_official_subset": true,
+  "error_count": 0,
+  "errors": [],
+  "id_overlap": {
+    "dev__official_test": [],
+    "train__dev": [],
+    "train__official_test": []
+  },
+  "official_test_text_overlap": {
+    "official_test_rows_seen_in_train": 456,
+    "official_test_rows_seen_in_train_pct": 99.781182,
+    "unique_official_test_texts": 423,
+    "unique_texts_in_both": 422,
+    "unique_train_texts": 2987
+  },
+  "schema_version": 1,
+  "source": "zeroth",
+  "speaker_overlap": {
+    "dev__official_test": [],
+    "train__dev": [],
+    "train__official_test": []
+  },
+  "splits": {
+    "curated_test": {
+      "duration_hours": 1.161713,
+      "speaker_gender": {
+        "f": 6,
+        "m": 4
+      },
+      "speakers": 10,
+      "utterances": 446
+    },
+    "dev": {
+      "duration_hours": 5.075924,
+      "speaker_gender": {
+        "f": 6,
+        "m": 4
+      },
+      "speakers": 10,
+      "utterances": 2183
+    },
+    "official_test": {
+      "duration_hours": 1.190903,
+      "speaker_gender": {
+        "f": 6,
+        "m": 4
+      },
+      "speakers": 10,
+      "utterances": 457
+    },
+    "review_holdout": {
+      "duration_hours": 0.933257,
+      "speaker_gender": {
+        "f": 57,
+        "m": 38
+      },
+      "speakers": 95,
+      "utterances": 439
+    },
+    "train": {
+      "duration_hours": 45.695823,
+      "speaker_gender": {
+        "f": 58,
+        "m": 37
+      },
+      "speakers": 95,
+      "utterances": 19651
+    }
+  },
+  "valid": true
+}

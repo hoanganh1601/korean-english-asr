@@ -1,0 +1,25 @@
+{
+  "final_reason_counts": {
+    "excessive_clipping": 3
+  },
+  "final_status_counts": {
+    "pass": 29995,
+    "quarantine_candidate": 3,
+    "review": 3864
+  },
+  "final_warning_counts": {
+    "high_speech_ratio": 3331,
+    "low_estimated_snr": 626
+  },
+  "merged_utterances": 33862,
+  "repaired_qc_replacements": 500,
+  "review_selection": {
+    "duration_hours": 1.777282,
+    "speakers": 76,
+    "split": "train",
+    "utterances": 543,
+    "warning": "low_estimated_snr"
+  },
+  "schema_version": 1,
+  "source": "librispeech"
+}

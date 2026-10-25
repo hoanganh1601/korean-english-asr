@@ -1,0 +1,53 @@
+{
+  "accepted_by_split": {
+    "dev": 2694,
+    "test": 2611,
+    "train": 28539
+  },
+  "accepted_duration_hours": 111.221593,
+  "accepted_utterances": 33844,
+  "duration_policy_sec": {
+    "maximum_inclusive": 30.0,
+    "minimum_inclusive": 1.0
+  },
+  "duration_sec": {
+    "maximum": 34.955,
+    "mean": 11.841467,
+    "median": 13.545,
+    "minimum": 1.285,
+    "p01": 2.245,
+    "p99": 16.95695
+  },
+  "quarantine_reasons": {
+    "duration_too_long": 18
+  },
+  "quarantined_utterances": 18,
+  "schema_version": 1,
+  "source": "librispeech",
+  "source_subsets": {
+    "dev-clean": 2703,
+    "test-clean": 2620,
+    "train-clean-100": 28539
+  },
+  "speaker_gender": {
+    "f": 165,
+    "m": 166
+  },
+  "speaker_overlap": {
+    "dev_test": 0,
+    "train_dev": 0,
+    "train_test": 0
+  },
+  "speakers": 331,
+  "speakers_by_split": {
+    "dev": 40,
+    "test": 40,
+    "train": 251
+  },
+  "text_overlap": {
+    "dev_test": 20,
+    "train_dev": 0,
+    "train_test": 4
+  },
+  "total_utterances": 33862
+}
