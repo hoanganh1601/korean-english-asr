@@ -1,0 +1,20 @@
+{
+  "accepted_utterances": 22719,
+  "accepted_with_warning": 604,
+  "quarantine_reasons": {
+    "manual_no_speech": 1
+  },
+  "quarantined_utterances": 1,
+  "schema_version": 1,
+  "source": "zeroth",
+  "splits": {
+    "accepted": {
+      "test": 457,
+      "train": 22262
+    },
+    "quarantined": {
+      "train": 1
+    }
+  },
+  "total_utterances": 22720
+}

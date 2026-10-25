@@ -1,0 +1,58 @@
+{
+  "holdout_reasons": {
+    "both_teachers_high_disagreement_consensus": 15,
+    "both_teachers_high_disagreement_no_consensus": 20,
+    "both_teachers_moderate_disagreement_consensus": 240,
+    "source_transcript_inconsistent": 51,
+    "teacher_predictions_ambiguous": 113
+  },
+  "input_utterances_after_audio_qc": 22719,
+  "manifests": {
+    "clean": {
+      "duration_hours": 51.933459,
+      "speakers": 115,
+      "splits": {
+        "test": 446,
+        "train": 21834
+      },
+      "utterances": 22280
+    },
+    "curated_test": {
+      "duration_hours": 1.161713,
+      "speakers": 10,
+      "splits": {
+        "test": 446
+      },
+      "utterances": 446
+    },
+    "holdout": {
+      "duration_hours": 0.933257,
+      "speakers": 95,
+      "splits": {
+        "test": 11,
+        "train": 428
+      },
+      "utterances": 439
+    },
+    "official_test": {
+      "duration_hours": 1.190903,
+      "speakers": 10,
+      "splits": {
+        "test": 457
+      },
+      "utterances": 457
+    },
+    "train_pool": {
+      "duration_hours": 50.771747,
+      "speakers": 105,
+      "splits": {
+        "train": 21834
+      },
+      "utterances": 21834
+    }
+  },
+  "policy_version": "zeroth_clean_manifest_v1",
+  "schema_version": 1,
+  "source": "zeroth",
+  "source_texts_modified": 0
+}

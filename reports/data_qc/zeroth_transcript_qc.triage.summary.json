@@ -1,0 +1,19 @@
+{
+  "candidate_reasons": {
+    "non_number_teacher_disagreement": 580,
+    "number_format_without_group_consensus": 1131,
+    "source_transcript_inconsistent_within_script": 51
+  },
+  "candidate_splits": {
+    "test": 34,
+    "train": 1716
+  },
+  "inconsistent_script_groups": 7,
+  "input_utterances": 22719,
+  "number_format_rows_with_group_consensus": 1285,
+  "rows_in_inconsistent_script_groups": 51,
+  "schema_version": 1,
+  "script_groups": 2999,
+  "second_teacher_candidates": 1750,
+  "source": "zeroth"
+}

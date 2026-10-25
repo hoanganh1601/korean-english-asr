@@ -1,0 +1,23 @@
+name: korean-english-asr
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - ffmpeg
+  - sox
+  - libsndfile
+  - pip
+  - pip:
+      - numpy
+      - pandas
+      - pyarrow
+      - scipy
+      - soundfile
+      - librosa
+      - pyloudnorm
+      - tqdm
+      - pyyaml
+      - jsonschema
+      - xxhash
+      - pytest

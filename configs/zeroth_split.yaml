@@ -1,0 +1,7 @@
+schema_version: 1
+policy_version: zeroth_speaker_split_v1
+random_seed: 42
+dev_speaker_fraction: 0.10
+optimization_trials: 20000
+stratify_by: speaker_gender
+group_by: speaker_id

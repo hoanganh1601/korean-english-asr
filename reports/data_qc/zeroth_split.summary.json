@@ -1,0 +1,25 @@
+{
+  "dev": {
+    "duration_hours": 5.075924,
+    "speaker_gender": {
+      "f": 6,
+      "m": 4
+    },
+    "speakers": 10,
+    "utterances": 2183
+  },
+  "policy_version": "zeroth_speaker_split_v1",
+  "random_seed": 42,
+  "schema_version": 1,
+  "source": "zeroth",
+  "speaker_overlap": [],
+  "train": {
+    "duration_hours": 45.695823,
+    "speaker_gender": {
+      "f": 58,
+      "m": 37
+    },
+    "speakers": 95,
+    "utterances": 19651
+  }
+}

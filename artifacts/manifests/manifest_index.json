@@ -1,0 +1,61 @@
+{
+  "bundle_version": "ko_en_handoff_v1",
+  "files": {
+    "hike_v1.test.jsonl": {
+      "path": "artifacts/manifests/hike_v1.test.jsonl",
+      "rows": 1121,
+      "sha256": "60fb9495ca42e188fe36be9c85933eb0074bbd2eef4026499a0054eabe1b36ea",
+      "size_bytes": 1512894
+    },
+    "librispeech_v1.clean_test.jsonl": {
+      "path": "artifacts/manifests/librispeech_v1.clean_test.jsonl",
+      "rows": 2611,
+      "sha256": "991f3ff9b6967f134312eac1bbe534ee255fe568c94df66d213077a04a014402",
+      "size_bytes": 2256974
+    },
+    "librispeech_v1.dev.jsonl": {
+      "path": "artifacts/manifests/librispeech_v1.dev.jsonl",
+      "rows": 2694,
+      "sha256": "129cf52a940825ce74eb5f38fcb433b1c48e358f17d8121c77bfda7da5580163",
+      "size_bytes": 2319615
+    },
+    "librispeech_v1.official_test.jsonl": {
+      "path": "artifacts/manifests/librispeech_v1.official_test.jsonl",
+      "rows": 2620,
+      "sha256": "37c03da192e367181152dc867680174ce60782fb9f127ec8edbde2606a4e649f",
+      "size_bytes": 2270413
+    },
+    "librispeech_v1.train.jsonl": {
+      "path": "artifacts/manifests/librispeech_v1.train.jsonl",
+      "rows": 28539,
+      "sha256": "10d1afd074c6fbe6031a9e1674d43c3d159d2950c77a68aeaafc436a340c2752",
+      "size_bytes": 29546940
+    },
+    "zeroth_v1.clean_test.jsonl": {
+      "path": "artifacts/manifests/zeroth_v1.clean_test.jsonl",
+      "rows": 446,
+      "sha256": "50f2745ed44090c109e2786ba96f7a9eef04fa09e2628e0948f20df788a1cd49",
+      "size_bytes": 401959
+    },
+    "zeroth_v1.dev.jsonl": {
+      "path": "artifacts/manifests/zeroth_v1.dev.jsonl",
+      "rows": 2183,
+      "sha256": "658657374cfe34596c39b2e15bd33b00b1df4d55a472b20657f730f5ae9c5a79",
+      "size_bytes": 1971400
+    },
+    "zeroth_v1.official_test.jsonl": {
+      "path": "artifacts/manifests/zeroth_v1.official_test.jsonl",
+      "rows": 457,
+      "sha256": "b7d009aadac329ba26807aa83bcbfbd2d72432663ca35d7db070030f3c239fda",
+      "size_bytes": 411831
+    },
+    "zeroth_v1.train.jsonl": {
+      "path": "artifacts/manifests/zeroth_v1.train.jsonl",
+      "rows": 19651,
+      "sha256": "311d0fbf0ef8ef3acd228d1cf1617bd71efcd427183ff1224cc9f08d75d6d402",
+      "size_bytes": 17739686
+    }
+  },
+  "manifest_format": "slim_v1",
+  "schema_version": 1
+}

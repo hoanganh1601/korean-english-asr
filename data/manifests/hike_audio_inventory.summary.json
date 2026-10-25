@@ -1,0 +1,22 @@
+{
+  "codecs": {
+    "pcm_s16le": 1121
+  },
+  "created_utc": "2026-10-25T02:36:15.849212+00:00",
+  "duplicate_files_by_checksum": 0,
+  "error_files": 0,
+  "extensions": {
+    ".wav": 1121
+  },
+  "ok_files": 1121,
+  "raw_dir": "/media/icnlab/Data/hoanganh/datasets/hike/HiKE-619ebb54-extracted",
+  "sample_rates": {
+    "16000": 1121
+  },
+  "sources": {
+    "audio": 1121
+  },
+  "total_duration_hours": 2.22181,
+  "total_files": 1121,
+  "workers": 19
+}

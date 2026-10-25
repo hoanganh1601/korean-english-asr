@@ -1,0 +1,13 @@
+schema_version: 1
+source: hike
+policy:
+  preserve_official_audio: true
+  preserve_official_transcript: true
+  high_speech_ratio_is_review_only: true
+decisions:
+  hike_31d22cd7-9c28-4964-9f17-906733304f20:
+    action: keep
+    reason: tightly_segmented_speech_with_good_snr
+  hike_9aeb70f8-5e89-4aea-b87c-322e555a9f42:
+    action: keep
+    reason: tightly_segmented_speech_with_good_snr

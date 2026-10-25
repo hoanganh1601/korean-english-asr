@@ -1,0 +1,59 @@
+{
+  "batch_size": 8,
+  "flag_counts": {},
+  "metrics": {
+    "cer": {
+      "maximum": 0.051471,
+      "mean": 0.009918,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p90": 0.031814,
+      "p99": 0.049276
+    },
+    "wer": {
+      "maximum": 0.12766,
+      "mean": 0.018164,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p90": 0.05125,
+      "p99": 0.117886
+    }
+  },
+  "model": {
+    "dtype": "float16",
+    "id": "openai/whisper-large-v3-turbo",
+    "language": "en",
+    "requested_revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+    "resolved_revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+    "task": "transcribe"
+  },
+  "normalization": {
+    "cer_remove_whitespace": true,
+    "version": "eval_nfc_lower_no_punctuation_v1"
+  },
+  "output_key": "transcript_qc_teacher_en",
+  "performance": {
+    "audio_hours": 0.048764,
+    "elapsed_sec": 6.335,
+    "peak_vram_gib": 3.736,
+    "real_time_factor": 0.036088
+  },
+  "pipeline_version": "0.1.0",
+  "schema_version": 1,
+  "selection": {
+    "input_utterances": 543,
+    "processed_utterances": 16,
+    "random_seed": 42,
+    "sample_size": 16
+  },
+  "status_counts": {
+    "pass": 16
+  },
+  "thresholds": {
+    "high_disagreement_above": 0.5,
+    "primary_metric": "wer",
+    "review_above": 0.25
+  }
+}

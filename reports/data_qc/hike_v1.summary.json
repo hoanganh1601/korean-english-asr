@@ -1,0 +1,39 @@
+{
+  "acoustic_statuses": {
+    "pass": 1119,
+    "review": 2
+  },
+  "categories": {
+    "academic": 157,
+    "business": 169,
+    "entertainment": 90,
+    "everyday conversation": 158,
+    "language education": 158,
+    "medical": 76,
+    "software development": 162,
+    "travel and culture": 151
+  },
+  "cs_levels": {
+    "phrase": 607,
+    "sentence": 57,
+    "word": 457
+  },
+  "dataset_version": "hike_v1",
+  "duration_hours": 2.22181,
+  "language": "ko-en",
+  "license": "Apache-2.0",
+  "manual_keep_decisions": 2,
+  "maximum_duration_sec": 24.84,
+  "minimum_duration_sec": 2.28,
+  "policies": {
+    "preserve_official_audio": true,
+    "preserve_official_transcript": true,
+    "training_use_prohibited": true
+  },
+  "schema_version": 1,
+  "source": "hike",
+  "source_revision": "619ebb54a3f26c0ea8d5943695e785c05b0dd038",
+  "speaker_metadata_available": false,
+  "usage": "evaluation_only",
+  "utterances": 1121
+}

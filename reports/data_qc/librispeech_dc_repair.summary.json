@@ -1,0 +1,27 @@
+{
+  "abs_dc_offset_after": {
+    "maximum": 1.52371e-05,
+    "mean": 7.0548932e-06,
+    "median": 6.893e-06,
+    "minimum": 2e-10
+  },
+  "abs_dc_offset_before": {
+    "maximum": 0.2574366178,
+    "mean": 0.0652122527544,
+    "median": 0.02967864965,
+    "minimum": 0.0200239696
+  },
+  "gain_reduced_utterances": 29,
+  "input_utterances": 33862,
+  "method": "subtract_per_channel_mean_v1",
+  "minimum_applied_gain": 0.9347108265,
+  "peak_target": 0.99,
+  "raw_audio_modified": false,
+  "repaired_duration_hours": 1.644529,
+  "repaired_utterances": 500,
+  "schema_version": 1,
+  "source": "librispeech",
+  "splits": {
+    "train": 500
+  }
+}

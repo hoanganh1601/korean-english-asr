@@ -1,0 +1,61 @@
+{
+  "batch_size": 8,
+  "flag_counts": {
+    "teacher_disagreement": 1,
+    "teacher_disagreement_number_format": 1
+  },
+  "metrics": {
+    "cer": {
+      "maximum": 0.142857,
+      "mean": 0.029922,
+      "median": 0.009091,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p90": 0.088049,
+      "p99": 0.136147
+    },
+    "wer": {
+      "maximum": 0.5,
+      "mean": 0.165393,
+      "median": 0.160256,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p90": 0.378571,
+      "p99": 0.491842
+    }
+  },
+  "model": {
+    "dtype": "float16",
+    "id": "openai/whisper-large-v3-turbo",
+    "language": "ko",
+    "requested_revision": "main",
+    "resolved_revision": "main",
+    "task": "transcribe"
+  },
+  "normalization": {
+    "cer_remove_whitespace": true,
+    "version": "eval_nfc_lower_no_punctuation_v1"
+  },
+  "performance": {
+    "audio_hours": 0.072943,
+    "elapsed_sec": 6.92,
+    "peak_vram_gib": 3.736,
+    "real_time_factor": 0.026354
+  },
+  "pipeline_version": "0.1.0",
+  "schema_version": 1,
+  "selection": {
+    "input_utterances": 22719,
+    "processed_utterances": 32,
+    "random_seed": 42,
+    "sample_size": 32
+  },
+  "status_counts": {
+    "pass": 30,
+    "review": 2
+  },
+  "thresholds": {
+    "cer_high_disagreement_above": 0.3,
+    "cer_review_above": 0.1
+  }
+}

@@ -1,0 +1,22 @@
+schema_version: 1
+pipeline_version: "0.1.0"
+random_seed: 42
+output_key: transcript_qc_teacher2
+
+model:
+  id: openai/whisper-large-v3
+  revision: 06f233fe06e710322aca913c1bc4249a0d71fce1
+  dtype: float16
+  language: ko
+  task: transcribe
+
+inference:
+  batch_size: 4
+
+normalization:
+  version: eval_nfc_lower_no_punctuation_v1
+  cer_remove_whitespace: true
+
+thresholds:
+  cer_review_above: 0.10
+  cer_high_disagreement_above: 0.30

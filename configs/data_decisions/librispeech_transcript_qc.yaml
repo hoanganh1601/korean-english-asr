@@ -1,0 +1,19 @@
+schema_version: 1
+source: librispeech
+policy:
+  preserve_official_transcript: true
+  automatic_teacher_replacement: false
+  teacher_predictions_are_advisory: true
+decisions:
+  librispeech_2007-132570-0009:
+    action: keep
+    text_action: preserve_source
+    reason: teacher2_exact_match
+  librispeech_211-122442-0081:
+    action: keep
+    text_action: preserve_source
+    reason: proper_word_monsieur_teacher_phonetic_rendering
+  librispeech_2764-36617-0014:
+    action: keep
+    text_action: preserve_source
+    reason: proper_name_conseil_teacher_phonetic_rendering

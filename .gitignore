@@ -1,0 +1,46 @@
+# Raw and generated datasets
+data/raw/**
+data/interim/**
+data/processed/**
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+# Models and training artifacts
+checkpoints/
+outputs/
+wandb/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+
+# Audio/video
+*.wav
+*.flac
+*.mp3
+*.m4a
+*.mp4
+*.mkv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+
+# Logs and temporary files
+logs/**
+*.log
+.cache/
+.DS_Store
+
+# Full generated manifests
+data/manifests/*.jsonl
+data/manifests/*.jsonl.tmp
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/

@@ -1,0 +1,111 @@
+{
+  "metrics": {
+    "abs_dc_offset": {
+      "maximum": 0.000116,
+      "mean": 0.0,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p99": 4e-06
+    },
+    "clipping_fraction": {
+      "maximum": 0.000875,
+      "mean": 1e-06,
+      "median": 0.0,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p99": 1.5e-05
+    },
+    "estimated_snr_db": {
+      "maximum": 68.663778,
+      "mean": 36.637767,
+      "median": 37.107932,
+      "minimum": -11.35491,
+      "p01": 11.325465,
+      "p99": 57.091679
+    },
+    "leading_silence_sec": {
+      "maximum": 13.985437,
+      "mean": 0.521467,
+      "median": 0.522,
+      "minimum": 0.0,
+      "p01": 0.0019,
+      "p99": 1.098
+    },
+    "peak_dbfs": {
+      "maximum": 0.0,
+      "mean": -11.602545,
+      "median": -11.804304,
+      "minimum": -28.370798,
+      "p01": -23.459795,
+      "p99": -0.000265
+    },
+    "rms_dbfs": {
+      "maximum": -16.459257,
+      "mean": -30.251393,
+      "median": -30.729847,
+      "minimum": -46.402437,
+      "p01": -40.749039,
+      "p99": -19.124952
+    },
+    "speech_ratio": {
+      "maximum": 1.0,
+      "mean": 0.872898,
+      "median": 0.887413,
+      "minimum": 0.0,
+      "p01": 0.67023,
+      "p99": 0.988463
+    },
+    "trailing_silence_sec": {
+      "maximum": 13.985437,
+      "mean": 0.460942,
+      "median": 0.264625,
+      "minimum": 0.0,
+      "p01": 0.0,
+      "p99": 2.099961
+    }
+  },
+  "pipeline_version": "0.1.0",
+  "reason_counts": {},
+  "schema_version": 1,
+  "source": "zeroth",
+  "status_counts": {
+    "pass": 22115,
+    "review": 605
+  },
+  "thresholds": {
+    "duration_policy": {
+      "too_long": "quarantine",
+      "too_short": "reject"
+    },
+    "reject": {
+      "decode_error": true,
+      "empty_audio": true,
+      "max_abs_dc_offset": 0.02,
+      "max_clipping_fraction": 0.001,
+      "min_rms_dbfs": -55.0,
+      "non_finite_samples": true
+    },
+    "warn": {
+      "estimated_snr_below_db": 10.0,
+      "speech_ratio_above": 0.98,
+      "speech_ratio_below": 0.3
+    }
+  },
+  "total_utterances": 22720,
+  "vad": {
+    "engine": "silero-vad",
+    "min_silence_duration_ms": 300,
+    "min_speech_duration_ms": 250,
+    "speech_pad_ms": 150,
+    "threshold": 0.5,
+    "version": "6.2.3"
+  },
+  "warning_counts": {
+    "high_speech_ratio": 431,
+    "low_estimated_snr": 179,
+    "low_speech_ratio": 1,
+    "no_speech_detected": 1
+  },
+  "workers": 8
+}
