@@ -2,6 +2,7 @@
 data/raw/**
 data/interim/**
 data/processed/**
+data/datasets/**
 
 # Keep directory structure
 !data/raw/.gitkeep

@@ -1,0 +1,38 @@
+[
+  {
+    "file": "data\\sample_audios\\hike_1_hike_1.wav",
+    "source": "HiKE (Korean-English Code-Switch)",
+    "duration_sec": 4.08,
+    "reference": "이번 bug는 session management logic에 문제가 있었어."
+  },
+  {
+    "file": "data\\sample_audios\\hike_2_hike_2.wav",
+    "source": "HiKE (Korean-English Code-Switch)",
+    "duration_sec": 5.46,
+    "reference": "오늘 downtown에서 새로운 brunch cafe 발견했는데 정말 cozy하더라."
+  },
+  {
+    "file": "data\\sample_audios\\hike_3_hike_3.wav",
+    "source": "HiKE (Korean-English Code-Switch)",
+    "duration_sec": 3.78,
+    "reference": "We're stuck in a 잘 보이려고만 만든 reporting process."
+  },
+  {
+    "file": "data\\sample_audios\\zeroth_1.wav",
+    "source": "Zeroth-Korean (Clean Korean)",
+    "duration_sec": 10.9286875,
+    "reference": "지난해 삼 월 김 전 장관의 동료인 장동련 홍익대 교수가 민간 자문단장으로 위촉되면서 본격적인 공모와 개발 작업에 들어갔다"
+  },
+  {
+    "file": "data\\sample_audios\\zeroth_2.wav",
+    "source": "Zeroth-Korean (Clean Korean)",
+    "duration_sec": 8.816875,
+    "reference": "그 바람에 나의 몸도 겹쳐 쓰러지며 한창 피어난 노란 동백꽃 속으로 폭 파묻혀 버렸다"
+  },
+  {
+    "file": "data\\sample_audios\\zeroth_3.wav",
+    "source": "Zeroth-Korean (Clean Korean)",
+    "duration_sec": 10.4323125,
+    "reference": "현재 백화점과 영화관 등은 오픈해 영업하고 있고 테마파크 및 아파트 등의 공사는 이천 십 팔 년 완공을 목표로 진행돼 왔다"
+  }
+]
