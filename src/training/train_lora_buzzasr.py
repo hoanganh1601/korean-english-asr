@@ -106,11 +106,13 @@ class MixedDataset(torch.utils.data.Dataset):
         syn_prob: float = 0.20,
         total_virtual_samples: int,
         seed: int = 42,
+        full_dataset: bool = False,
     ) -> None:
         self.ko = ko_dataset
         self.en = en_dataset
         self.cs = cs_dataset
         self.syn = syn_dataset
+        self.full_dataset = full_dataset
 
         if self.syn is None:
             # Rebalance without synthetic
@@ -132,6 +134,33 @@ class MixedDataset(torch.utils.data.Dataset):
 
     def _build_index(self) -> None:
         self._index: list[tuple[str, int]] = []
+        if self.full_dataset:
+            # Exact exhaustive 100% coverage of all datasets (54,595 unique samples)
+            for i in range(len(self.ko)):
+                self._index.append(("ko", i))
+            for i in range(len(self.en)):
+                self._index.append(("en", i))
+            for i in range(len(self.cs)):
+                self._index.append(("cs", i))
+            if self.syn is not None:
+                for i in range(len(self.syn)):
+                    self._index.append(("syn", i))
+            self.rng.shuffle(self._index)
+            self.total = len(self._index)
+            return
+
+        # Shuffled permutation queues without replacement per stream
+        queues: dict[str, list[int]] = {"ko": [], "en": [], "cs": [], "syn": []}
+        datasets_map = {"ko": self.ko, "en": self.en, "cs": self.cs, "syn": self.syn}
+
+        def _next_from_stream(name: str) -> int:
+            ds = datasets_map[name]
+            if not queues[name]:
+                idxs = list(range(len(ds)))
+                self.rng.shuffle(idxs)
+                queues[name] = idxs
+            return queues[name].pop()
+
         p_ko = self.ko_prob
         p_en = p_ko + self.en_prob
         p_cs = p_en + self.cs_prob
@@ -139,17 +168,13 @@ class MixedDataset(torch.utils.data.Dataset):
         for _ in range(self.total):
             r = self.rng.random()
             if r < p_ko:
-                idx = self.rng.randrange(len(self.ko))
-                self._index.append(("ko", idx))
+                self._index.append(("ko", _next_from_stream("ko")))
             elif r < p_en:
-                idx = self.rng.randrange(len(self.en))
-                self._index.append(("en", idx))
+                self._index.append(("en", _next_from_stream("en")))
             elif r < p_cs or self.syn is None:
-                idx = self.rng.randrange(len(self.cs))
-                self._index.append(("cs", idx))
+                self._index.append(("cs", _next_from_stream("cs")))
             else:
-                idx = self.rng.randrange(len(self.syn))
-                self._index.append(("syn", idx))
+                self._index.append(("syn", _next_from_stream("syn")))
 
     def __len__(self) -> int:
         return self.total
@@ -274,6 +299,10 @@ def parse_args() -> argparse.Namespace:
         "--grad-accum", type=int, default=4,
         help="Gradient accumulation steps (default: 4). Effective batch = batch_size * grad_accum.",
     )
+    p.add_argument(
+        "--full-dataset", action="store_true",
+        help="Train exhaustively over 100% of all 54,595 unique training utterances across all 4 manifests.",
+    )
     return p.parse_args()
 
 
@@ -292,9 +321,15 @@ def main() -> int:
     effective_batch = args.batch_size * args.grad_accum
 
     # Determine max_steps
-    # Default: 1 full epoch over the virtual mixed training set
+    # Default: 1 full epoch over the virtual mixed training set or exact 54,595 full dataset
     ko_count = sum(1 for _ in open(KO_TRAIN, encoding="utf-8") if _.strip())
-    virtual_epoch = math.ceil(ko_count / 0.50)  # implied total at 50% KO ratio
+    if args.full_dataset:
+        en_count = sum(1 for _ in open(EN_TRAIN, encoding="utf-8") if _.strip())
+        cs_count = sum(1 for _ in open(CS_TRAIN, encoding="utf-8") if _.strip())
+        syn_count = sum(1 for _ in open(SYN_TRAIN, encoding="utf-8") if _.strip()) if SYN_TRAIN.exists() else 0
+        virtual_epoch = ko_count + en_count + cs_count + syn_count
+    else:
+        virtual_epoch = math.ceil(ko_count / 0.50)  # implied total at 50% KO ratio
     default_steps = math.ceil(virtual_epoch / effective_batch)
 
     if args.pilot:
@@ -305,8 +340,8 @@ def main() -> int:
         print("\n[PILOT MODE] Running 500-step sanity check.")
     else:
         max_steps = args.max_steps if args.max_steps else default_steps
-        eval_steps = 100
-        save_steps = 100
+        eval_steps = 400 if max_steps > 1000 else 100
+        save_steps = 400 if max_steps > 1000 else 100
         warmup_steps = max(100, max_steps // 30)
 
     virtual_total = max_steps * effective_batch
@@ -388,8 +423,17 @@ def main() -> int:
     loanwords_dict = None
     if LOANWORDS_PATH.exists() and args.loanwords_prob > 0:
         with open(LOANWORDS_PATH, "r", encoding="utf-8") as f:
-            loanwords_dict = json.load(f)
-        print(f"  Loaded {len(loanwords_dict)} loanword pairs for synthetic CS augmentation.")
+            raw_loanwords = json.load(f)
+        # Exclude hyper-localized everyday Korean words from forced Latin replacement
+        # so the model preserves natural Hangul in daily contexts (e.g. '카페에서', '커피를')
+        localized_everyday_ko = {
+            "카페", "커피", "버스", "택시", "호텔", "아파트",
+            "드라마", "치킨", "샐러드", "피자", "캠핑",
+        }
+        loanwords_dict = {
+            k: v for k, v in raw_loanwords.items() if k not in localized_everyday_ko
+        }
+        print(f"  Loaded {len(loanwords_dict)} technical/business loanword pairs for synthetic CS augmentation.")
 
     ko_train_ds = ManifestDataset(
         KO_TRAIN, processor, shuffle=True, seed=args.seed,
@@ -414,6 +458,7 @@ def main() -> int:
         syn_prob=args.syn_prob,
         total_virtual_samples=virtual_total,
         seed=args.seed,
+        full_dataset=args.full_dataset,
     )
 
     # Dev: 100 KO + 100 EN + 100 CS fixed sample for in-training eval

@@ -33,7 +33,7 @@ from aiohttp import web
 
 # Global runner instance & Manifest Index
 runner_instance = None
-current_model_mode = "lora_v4"  # "lora_v4", "lora_v3", or "base"
+current_model_mode = "lora_v5"  # "lora_v5", "lora_v4", "lora_v3", or "base"
 MANIFEST_LOOKUP: Dict[str, Dict[str, str]] = {}
 
 
@@ -154,7 +154,10 @@ def lookup_real_text(filename: str) -> Optional[Dict[str, str]]:
     return None
 
 
-from src.evaluation.buzzasr_runner import normalize_for_evaluation
+from src.evaluation.text_normalizer import (
+    normalize_for_evaluation,
+    normalize_pair_for_evaluation,
+)
 
 
 def normalize_text(text: str) -> str:
@@ -187,8 +190,7 @@ def compute_cer(ref: str, pred: str) -> float:
 
 def analyze_errors(ref_raw: str, pred_raw: str) -> Dict[str, Any]:
     """Perform comprehensive word-level alignment & error diagnostics."""
-    ref_norm = normalize_text(ref_raw)
-    pred_norm = normalize_text(pred_raw)
+    ref_norm, pred_norm = normalize_pair_for_evaluation(ref_raw, pred_raw)
 
     ref_words = ref_norm.split()
     pred_words = pred_norm.split()
@@ -335,14 +337,18 @@ def analyze_errors(ref_raw: str, pred_raw: str) -> Dict[str, Any]:
     }
 
 
-def get_asr_runner(mode="lora_v3"):
+def get_asr_runner(mode="lora_v5"):
     global runner_instance, current_model_mode
     if runner_instance is not None and current_model_mode == mode:
         return runner_instance
 
     from src.evaluation.buzzasr_runner import WhisperASRRunner
 
-    if mode == "lora_v4":
+    if mode == "lora_v5":
+        adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
+        if not (PROJECT_ROOT / adapter).exists():
+            adapter = "artifacts/checkpoints/buzzasr_lora_v4/final"
+    elif mode == "lora_v4":
         adapter = "artifacts/checkpoints/buzzasr_lora_v4/final"
         if not (PROJECT_ROOT / adapter).exists():
             adapter = "artifacts/checkpoints/buzzasr_lora_v3/final"
@@ -435,7 +441,7 @@ async def handle_transcribe(request):
     audio_bytes = None
     filename = "uploaded_audio.wav"
     ref_text = ""
-    model_mode = "lora_v3"
+    model_mode = "lora_v5"
 
     while True:
         part = await reader.next()
@@ -536,7 +542,7 @@ def main():
     # Preload & Warm up ASR model by default so inference is immediate
     if not args.no_preload:
         print("⚡ Preloading & Warming up ASR model on GPU for ultra-fast response...")
-        get_asr_runner("lora_v4")
+        get_asr_runner("lora_v5")
 
     app = create_app()
     print(f"\n=======================================================")

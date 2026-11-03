@@ -28,150 +28,13 @@ os.environ["TRANSFORMERS_CACHE"] = str(CACHE_DIR / "hub")
 import torch
 
 
-# English contractions, abbreviations, and compound normalizations
-EN_NORM_MAP = {
-    "mr": "mister",
-    "mrs": "missus",
-    "ms": "miss",
-    "dr": "doctor",
-    "st": "saint",
-    "youre": "you are",
-    "you're": "you are",
-    "im": "i am",
-    "i'm": "i am",
-    "ive": "i have",
-    "i've": "i have",
-    "id": "i would",
-    "i'd": "i would",
-    "itd": "it would",
-    "it'd": "it would",
-    "its": "it is",
-    "it's": "it is",
-    "were": "we are",
-    "we're": "we are",
-    "theyre": "they are",
-    "they're": "they are",
-    "didnt": "did not",
-    "didn't": "did not",
-    "dont": "do not",
-    "don't": "do not",
-    "doesnt": "does not",
-    "doesn't": "does not",
-    "cant": "cannot",
-    "can't": "cannot",
-    "wont": "will not",
-    "won't": "will not",
-    "isnt": "is not",
-    "isn't": "is not",
-    "arent": "are not",
-    "aren't": "are not",
-    "wasnt": "was not",
-    "wasn't": "was not",
-    "werent": "were not",
-    "weren't": "were not",
-    "hasnt": "has not",
-    "hasn't": "has not",
-    "havent": "have not",
-    "haven't": "have not",
-    "hadnt": "had not",
-    "hadn't": "had not",
-    "wouldnt": "would not",
-    "wouldn't": "would not",
-    "shouldnt": "should not",
-    "shouldn't": "should not",
-    "couldnt": "could not",
-    "couldn't": "could not",
-    "thats": "that is",
-    "that's": "that is",
-    "theres": "there is",
-    "there's": "there is",
-    "whats": "what is",
-    "what's": "what is",
-    "whos": "who is",
-    "who's": "who is",
-    "lets": "let us",
-    "let's": "let us",
-}
-
-# Compound English & Korean spacing patterns normalized to canonical form
-COMPOUND_NORM_PATTERNS = [
-    (re.compile(r"\bthird\s+party\b"), "thirdparty"),
-    (re.compile(r"\blarge\s+scale\b"), "largescale"),
-    (re.compile(r"\bmicro\s+services\b"), "microservices"),
-    (re.compile(r"\breal\s+time\b"), "realtime"),
-    (re.compile(r"\bopen\s+source\b"), "opensource"),
-    (re.compile(r"\bdeep\s+learning\b"), "deeplearning"),
-    (re.compile(r"\bmachine\s+learning\b"), "machinelearning"),
-    (re.compile(r"\bdata\s+base\b"), "database"),
-    (re.compile(r"\bdata\s+set\b"), "dataset"),
-    (re.compile(r"\bweb\s+toon\b"), "webtoon"),
-    (re.compile(r"\bpower\s+point\b"), "powerpoint"),
-    (re.compile(r"\bteam\s+work\b"), "teamwork"),
-    (re.compile(r"\bback\s+end\b"), "backend"),
-    (re.compile(r"\bfront\s+end\b"), "frontend"),
-    (re.compile(r"\bcode\s+base\b"), "codebase"),
-    (re.compile(r"\bwork\s+shop\b"), "workshop"),
-    (re.compile(r"\bguide\s+line\b"), "guideline"),
-    (re.compile(r"\btime\s+line\b"), "timeline"),
-    (re.compile(r"\bmile\s+stone\b"), "milestone"),
-    (re.compile(r"\bbase\s+line\b"), "baseline"),
-    (re.compile(r"\bpipe\s+line\b"), "pipeline"),
-    (re.compile(r"\bdead\s+line\b"), "deadline"),
-    (re.compile(r"\bon\s+line\b"), "online"),
-    (re.compile(r"\boff\s+line\b"), "offline"),
-    # Korean colloquial & auxiliary verb spacing normalization
-    (re.compile(r"([가-힣a-z0-9]+)한거\b"), r"\1한 것"),
-    (re.compile(r"([가-힣a-z0-9]+)할거\b"), r"\1할 것"),
-    (re.compile(r"([가-힣a-z0-9]+)인거\b"), r"\1인 것"),
-    (re.compile(r"해\s+봐야"), "해봐야"),
-    (re.compile(r"해\s+보았"), "해보았"),
-    (re.compile(r"해\s+봤"), "해봤"),
-    (re.compile(r"해\s+주세"), "해주세"),
-    (re.compile(r"해\s+달라"), "해달라"),
-]
-
-
-def normalize_for_evaluation(text: str) -> str:
-    """Normalize text for WER/CER evaluation:
-    - Unicode NFC
-    - Lowercase Latin characters
-    - Collapse hyphenated compounds (e.g. third-party -> thirdparty)
-    - Expand English contractions & titles (mr -> mister, youre -> you are)
-    - Normalize Korean auxiliary verb & colloquial spacing
-    - Remove punctuation and symbols
-    - Collapse extra whitespace
-    """
-    if not text:
-        return ""
-    normalized = unicodedata.normalize("NFC", text).lower()
-    # Join hyphenated English words (e.g. third-party -> thirdparty, large-scale -> largescale)
-    normalized = re.sub(r"([a-z0-9])[-–—]([a-z0-9])", r"\1\2", normalized)
-    # Handle apostrophes inside contractions before stripping punctuation
-    words_pre = normalized.split()
-    expanded_words = []
-    for w in words_pre:
-        w_clean = w.strip(".,!?;:\"'()[]{}")
-        if w_clean in EN_NORM_MAP:
-            expanded_words.append(EN_NORM_MAP[w_clean])
-        else:
-            expanded_words.append(w)
-    normalized = " ".join(expanded_words)
-
-    characters = [
-        " " if unicodedata.category(c)[0] in {"P", "S"} else c
-        for c in normalized
-    ]
-    cleaned = " ".join("".join(characters).split())
-
-    # Second pass token map after punctuation removal
-    tokens = [EN_NORM_MAP.get(tok, tok) for tok in cleaned.split()]
-    cleaned = " ".join(tokens)
-
-    # Apply compound & Korean auxiliary spacing rules
-    for pattern, repl in COMPOUND_NORM_PATTERNS:
-        cleaned = pattern.sub(repl, cleaned)
-
-    return " ".join(cleaned.split())
+from src.evaluation.text_normalizer import (
+    COMPOUND_NORM_PATTERNS,
+    EN_NORM_MAP,
+    UK_TO_US_MAP,
+    normalize_for_evaluation,
+    normalize_pair_for_evaluation,
+)
 
 
 def compute_edit_distance(ref_tokens: List[str], pred_tokens: List[str]) -> int:
@@ -192,16 +55,18 @@ def compute_edit_distance(ref_tokens: List[str], pred_tokens: List[str]) -> int:
 
 
 def compute_wer(ref: str, pred: str) -> float:
-    ref_words = ref.split()
-    pred_words = pred.split()
+    ref_aligned, pred_aligned = normalize_pair_for_evaluation(ref, pred)
+    ref_words = ref_aligned.split()
+    pred_words = pred_aligned.split()
     if not ref_words:
         return 0.0 if not pred_words else 1.0
     return compute_edit_distance(ref_words, pred_words) / len(ref_words)
 
 
 def compute_cer(ref: str, pred: str) -> float:
-    ref_chars = list(re.sub(r"\s+", "", ref))
-    pred_chars = list(re.sub(r"\s+", "", pred))
+    ref_aligned, pred_aligned = normalize_pair_for_evaluation(ref, pred)
+    ref_chars = list(re.sub(r"\s+", "", ref_aligned))
+    pred_chars = list(re.sub(r"\s+", "", pred_aligned))
     if not ref_chars:
         return 0.0 if not pred_chars else 1.0
     return compute_edit_distance(ref_chars, pred_chars) / len(ref_chars)
@@ -210,7 +75,13 @@ def compute_cer(ref: str, pred: str) -> float:
 class WhisperASRRunner:
     def __init__(self, model_id: str = "BuzzASR/korean", adapter_path: Optional[str] = None, device: str = "cuda"):
         self.model_id = model_id
-        self.adapter_path = adapter_path
+        if adapter_path:
+            p = Path(adapter_path)
+            if not p.is_absolute():
+                p = (PROJECT_ROOT / p).resolve()
+            self.adapter_path = str(p) if p.exists() else adapter_path
+        else:
+            self.adapter_path = None
         self.device = device if torch.cuda.is_available() and device == "cuda" else "cpu"
         print(f"\n=======================================================")
         print(f"Loading Model: {self.model_id}")
@@ -271,6 +142,7 @@ class WhisperASRRunner:
         audio_array,
         sampling_rate: int = 16000,
         language: Optional[str] = None,
+        prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Transcribe a 1D numpy array of audio at 16kHz with accelerated inference."""
         t0 = time.time()
@@ -302,6 +174,14 @@ class WhisperASRRunner:
             gen_kwargs["language"] = "ko"
             gen_kwargs["task"] = "transcribe"
 
+        # Group 4 support: Context / Hotwords Prompt Conditioning for domain proper nouns
+        if prompt and prompt.strip():
+            try:
+                prompt_ids = self.processor.get_prompt_ids(prompt.strip(), return_tensors="pt")
+                gen_kwargs["prompt_ids"] = prompt_ids.to(self.device)
+            except Exception:
+                pass
+
         with torch.inference_mode():
             gen_tokens = self.model.generate(input_features, **gen_kwargs)
 
@@ -321,7 +201,12 @@ class WhisperASRRunner:
             "peak_vram_mb": peak_vram_mb
         }
 
-    def transcribe_file(self, audio_path: str, language: Optional[str] = None) -> Dict[str, Any]:
+    def transcribe_file(
+        self,
+        audio_path: str,
+        language: Optional[str] = None,
+        prompt: Optional[str] = None,
+    ) -> Dict[str, Any]:
         import soundfile as sf
         audio_data, sr = sf.read(audio_path)
         if audio_data.ndim > 1:
@@ -330,7 +215,7 @@ class WhisperASRRunner:
             import librosa
             audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=16000)
             sr = 16000
-        return self.transcribe_audio_array(audio_data, sampling_rate=sr, language=language)
+        return self.transcribe_audio_array(audio_data, sampling_rate=sr, language=language, prompt=prompt)
 
 
 def run_benchmark_on_dataset(runner: WhisperASRRunner, dataset_name: str, split: str = "test", limit: int = 10):

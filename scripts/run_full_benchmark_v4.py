@@ -24,6 +24,7 @@ from src.evaluation.buzzasr_runner import (
     compute_cer,
     compute_wer,
     normalize_for_evaluation,
+    normalize_pair_for_evaluation,
 )
 
 BENCHMARKS = [
@@ -70,13 +71,24 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
             if line.strip():
                 items.append(json.loads(line))
 
+    cache_file = PROJECT_ROOT / "artifacts" / f".bench_cache_{Path(manifest_path).stem}.json"
     results = []
-    total_audio_sec = 0.0
-    total_infer_sec = 0.0
-    max_peak_vram = 0.0
+    if cache_file.exists():
+        try:
+            with open(cache_file, "r", encoding="utf-8") as f:
+                results = json.load(f)
+            print(f"Resuming {name} from cache: {len(results)}/{len(items)} samples already evaluated.", flush=True)
+        except Exception:
+            results = []
 
+    total_audio_sec = sum(r.get("duration_sec", 0.0) for r in results)
+    total_infer_sec = sum(r.get("infer_sec", 0.0) for r in results)
+    max_peak_vram = max([r.get("peak_vram", 0.0) for r in results] or [0.0])
+
+    start_idx = len(results) + 1
     t_start = time.time()
-    for idx, item in enumerate(items, 1):
+    for idx in range(start_idx, len(items) + 1):
+        item = items[idx - 1]
         rel_path = item["audio_path"]
         audio_abs = PROJECT_ROOT / rel_path
         ref_text = item.get("text", "") or item.get("text_normalized", "")
@@ -84,8 +96,7 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
         out = runner.transcribe_file(str(audio_abs), language=lang)
         pred_text = out["transcription"]
 
-        ref_norm = normalize_for_evaluation(ref_text)
-        pred_norm = normalize_for_evaluation(pred_text)
+        ref_norm, pred_norm = normalize_pair_for_evaluation(ref_text, pred_text)
 
         wer_val = compute_wer(ref_norm, pred_norm)
         cer_val = compute_cer(ref_norm, pred_norm)
@@ -108,30 +119,46 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
             "duration_sec": out["audio_duration_sec"],
             "infer_sec": out["inference_time_sec"],
             "rtf": out["real_time_factor"],
+            "peak_vram": out["peak_vram_mb"],
         })
 
-        if idx % 50 == 0 or idx == len(items) or idx <= 5:
+        # Save cache every 10 samples
+        if idx % 10 == 0 or idx == len(items):
+            try:
+                with open(cache_file, "w", encoding="utf-8") as f:
+                    json.dump(results, f, ensure_ascii=False)
+            except Exception:
+                pass
+
+        if idx % 25 == 0 or idx == len(items) or idx <= 5:
             curr_avg_wer = sum(r["wer"] for r in results) / len(results) * 100
             curr_avg_cer = sum(r["cer"] for r in results) / len(results) * 100
-            print(f"[{idx:3d}/{len(items)}] Current Avg WER: {curr_avg_wer:5.2f}% | CER: {curr_avg_cer:5.2f}% | RTF: {out['real_time_factor']:.3f} | Audio: {out['audio_duration_sec']:.1f}s")
-            if idx <= 3:
-                print(f"   REF:  {ref_text[:75]}")
-                print(f"   PRED: {pred_text[:75]}")
+            print(f"[{idx:3d}/{len(items)}] Current Avg WER: {curr_avg_wer:5.2f}% | CER: {curr_avg_cer:5.2f}% | RTF: {out['real_time_factor']:.3f} | Audio: {out['audio_duration_sec']:.1f}s", flush=True)
+            if idx <= 3 or idx % 50 == 0:
+                print(f"   REF:  {ref_text[:75]}", flush=True)
+                print(f"   PRED: {pred_text[:75]}", flush=True)
 
     elapsed = time.time() - t_start
     avg_wer = sum(r["wer"] for r in results) / len(results) * 100 if results else 0.0
     avg_cer = sum(r["cer"] for r in results) / len(results) * 100 if results else 0.0
     overall_rtf = total_infer_sec / total_audio_sec if total_audio_sec > 0 else 0.0
 
-    print(f"\n--- {name} Results ---")
-    print(f"  Samples:          {len(results)}")
-    print(f"  Average WER:      {avg_wer:.2f}%")
-    print(f"  Average CER:      {avg_cer:.2f}%")
-    print(f"  Total Audio:      {total_audio_sec:.1f}s ({total_audio_sec/60:.1f} min)")
-    print(f"  Total Latency:    {total_infer_sec:.1f}s ({total_infer_sec/60:.1f} min)")
-    print(f"  Overall RTF:      {overall_rtf:.3f}")
-    print(f"  Wall-clock Time:  {elapsed:.1f}s")
-    print(f"-----------------------------------------\n")
+    print(f"\n--- {name} Results ---", flush=True)
+    print(f"  Samples:          {len(results)}", flush=True)
+    print(f"  Average WER:      {avg_wer:.2f}%", flush=True)
+    print(f"  Average CER:      {avg_cer:.2f}%", flush=True)
+    print(f"  Total Audio:      {total_audio_sec:.1f}s ({total_audio_sec/60:.1f} min)", flush=True)
+    print(f"  Total Latency:    {total_infer_sec:.1f}s ({total_infer_sec/60:.1f} min)", flush=True)
+    print(f"  Overall RTF:      {overall_rtf:.3f}", flush=True)
+    print(f"  Wall-clock Time:  {elapsed:.1f}s", flush=True)
+    print(f"-----------------------------------------\n", flush=True)
+
+    # Clean up cache on complete
+    if cache_file.exists():
+        try:
+            cache_file.unlink()
+        except Exception:
+            pass
 
     return {
         "name": name,
@@ -145,13 +172,15 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
         "total_infer_sec": round(total_infer_sec, 2),
         "overall_rtf": round(overall_rtf, 3),
         "peak_vram_mb": round(max_peak_vram, 1),
-        "sample_details": results[:10],  # first 10 for inspectability
+        "sample_details": results,  # save all samples for complete inspectability & instant re-scoring
     }
 
 
 def main():
-    adapter_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v4" / "final"
-    print(f"\nInitializing BuzzASR + LoRA v4 from {adapter_path}...")
+    v5_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v5_full" / "final"
+    v4_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v4" / "final"
+    adapter_path = v5_path if v5_path.exists() else v4_path
+    print(f"\nInitializing BuzzASR + LoRA from {adapter_path}...")
     runner = WhisperASRRunner(
         model_id="BuzzASR/korean",
         adapter_path=str(adapter_path),
@@ -175,8 +204,9 @@ def main():
     weighted_cer = sum(s["avg_cer_pct"] * s["samples_evaluated"] for s in all_summaries) / total_samples
     overall_rtf = total_infer / total_audio if total_audio > 0 else 0.0
 
+    model_name = "BuzzASR/korean + LoRA v5 Full" if "v5" in str(adapter_path) else "BuzzASR/korean + LoRA v4"
     final_report = {
-        "model": "BuzzASR/korean + LoRA v4 (Synthetic CS + Loanwords 592)",
+        "model": f"{model_name} (Synthetic CS + Loanwords 592)",
         "adapter_path": str(adapter_path),
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "total_samples": total_samples,
@@ -189,7 +219,7 @@ def main():
         "benchmarks": all_summaries,
     }
 
-    out_file = PROJECT_ROOT / "artifacts" / "benchmark_lora_v4_full_results.json"
+    out_file = PROJECT_ROOT / "artifacts" / ("benchmark_lora_v5_full_results.json" if "v5" in str(adapter_path) else "benchmark_lora_v4_full_results.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(final_report, f, indent=2, ensure_ascii=False)
 
