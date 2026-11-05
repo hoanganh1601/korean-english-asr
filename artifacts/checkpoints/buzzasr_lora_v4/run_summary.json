@@ -1,0 +1,30 @@
+{
+  "model_id": "BuzzASR/korean",
+  "init_adapter": "artifacts/checkpoints/buzzasr_lora_v3/final",
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "learning_rate": 5e-05,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "out_proj",
+    "fc1",
+    "fc2"
+  ],
+  "max_steps": 500,
+  "effective_batch": 16,
+  "ko_train_rows": 19651,
+  "en_train_rows": 28539,
+  "cs_train_rows": 800,
+  "syn_train_rows": 5605,
+  "mix_ratios": {
+    "ko": 0.4,
+    "en": 0.25,
+    "cs": 0.15,
+    "syn": 0.2
+  },
+  "loanwords_prob": 0.75,
+  "seed": 42,
+  "pilot": false
+}

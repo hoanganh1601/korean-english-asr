@@ -1,0 +1,12 @@
+{
+  "model_id": "BuzzASR/korean",
+  "lora_r": 32,
+  "lora_alpha": 64,
+  "max_steps": 500,
+  "effective_batch": 16,
+  "ko_train_rows": 19651,
+  "en_train_rows": 28539,
+  "ko_prob": 0.6,
+  "seed": 42,
+  "pilot": true
+}

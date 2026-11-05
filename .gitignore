@@ -10,16 +10,20 @@ data/datasets/**
 !data/processed/.gitkeep
 
 # Models and training artifacts
-checkpoints/
+/checkpoints/
+artifacts/checkpoints/**/checkpoint-*/
 outputs/
 wandb/
 *.ckpt
 *.pt
 *.pth
+*.bin
 *.safetensors
+!artifacts/checkpoints/buzzasr_lora_v5_full/final/adapter_model.safetensors
 
 # Audio/video
 *.wav
+!data/sample_audios/*.wav
 *.flac
 *.mp3
 *.m4a
@@ -35,6 +39,7 @@ __pycache__/
 # Logs and temporary files
 logs/**
 *.log
+!reports/extracted_logs/*.log
 .cache/
 .DS_Store
 

@@ -1,0 +1,125 @@
+
+=======================================================
+Loading Model: BuzzASR/korean
+LoRA Adapter:  artifacts/checkpoints/buzzasr_lora_v3/final
+Device: cuda
+GPU: NVIDIA RTX A4000
+Initial VRAM Allocated: 0.00 MB
+=======================================================
+Loading weights:   0%|          | 0/1259 [00:00<?, ?it/s]Loading weights:   3%|▎         | 39/1259 [00:00<00:05, 236.07it/s]Loading weights:   5%|▌         | 63/1259 [00:00<00:07, 157.71it/s]Loading weights:   6%|▋         | 80/1259 [00:00<00:10, 116.81it/s]Loading weights:   8%|▊         | 97/1259 [00:00<00:09, 123.68it/s]Loading weights:  12%|█▏        | 145/1259 [00:00<00:05, 203.25it/s]Loading weights:  13%|█▎        | 169/1259 [00:00<00:05, 188.28it/s]Loading weights:  15%|█▌        | 190/1259 [00:01<00:11, 96.29it/s] Loading weights:  16%|█▋        | 206/1259 [00:01<00:11, 87.76it/s]Loading weights:  17%|█▋        | 219/1259 [00:01<00:12, 83.40it/s]Loading weights:  18%|█▊        | 230/1259 [00:02<00:12, 81.10it/s]Loading weights:  20%|██        | 255/1259 [00:02<00:09, 110.19it/s]Loading weights:  80%|███████▉  | 1003/1259 [00:02<00:00, 1569.74it/s]Loading weights: 100%|██████████| 1259/1259 [00:02<00:00, 549.30it/s] 
+[transformers] Passing `generation_config` together with generation-related arguments=({'suppress_tokens', 'begin_suppress_tokens'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer WhisperTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+Loading LoRA adapter from artifacts/checkpoints/buzzasr_lora_v3/final...
+Model loaded in 9.10s. VRAM allocated: 3392.22 MB
+
+--- Running benchmark on local manifest: artifacts/manifests/zeroth_v1.dev.jsonl (limit=20) ---
+
+[Sample 1/20] (Duration: 8.01s | Latency: 4290.7ms | RTF: 0.536)
+  REF:  국내 토지보상제도의 근간은 공익사업을 위한 토지 등의 취득 및 보상에 관한 법률이다
+  PRED: 국내 토지보상제도의 근간은 공익사업을 위한 토지 등의 취득 및 보상에 관한 법률이다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 2/20] (Duration: 6.08s | Latency: 2157.4ms | RTF: 0.355)
+  REF:  갈탄은 대부분 발전소로 보내져서 에너지를 생산하는 데 사용됩니다
+  PRED: 갈탄은 대부분 발전소로 보내져서 에너지를 생산하는 데 사용됩니다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 3/20] (Duration: 6.49s | Latency: 3077.9ms | RTF: 0.474)
+  REF:  그밖의 자세한 사항은 중앙선거여론조사심의위원회 홈페이지를 참조하면 된다
+  PRED: 그밖의 자세한 사항은 중앙선거여론조사심의위원회 홈페이지를 참조하면 된다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 4/20] (Duration: 5.70s | Latency: 1934.1ms | RTF: 0.340)
+  REF:  교만해져서 이상한 짓을 저질러요 우리 역사적으로 보면
+  PRED: 교만해져서 이상한 짓을 저질러요 우리 역사적으로 보면
+  WER:  0.00% | CER: 0.00%
+
+[Sample 5/20] (Duration: 6.19s | Latency: 2009.6ms | RTF: 0.324)
+  REF:  우선 이름 주소 전화번호 전자 우편 주소를 기재하십시오
+  PRED: 우선 이름 주소 전화번호 전자 우편 주소를 기대하십시오
+  WER:  12.50% | CER: 4.35%
+
+[Sample 6/20] (Duration: 10.07s | Latency: 4016.3ms | RTF: 0.399)
+  REF:  김현정 아니 형사재판은 형사재판이고 탄핵심판은 탄핵심판인데 두 개를 헷갈리게 만드는 작전이라는 게 무슨 말씀이세요
+  PRED: 김현정 아니 형사재판은 형사 재판이고 탄핵시판은 탄핸방인데 두 개를 헷갈리게 만드는 작전이라는 게 무슨 말씀이세요
+  WER:  28.57% | CER: 8.00%
+
+[Sample 7/20] (Duration: 9.56s | Latency: 3282.8ms | RTF: 0.344)
+  REF:  대한주택보증 입장에서는 손실 가능성을 최소화하기 위해 수수료를 높게 요구할 수밖에 없는 구조다
+  PRED: 대한주택보증 입장에서는 손실 가능성을 최소화하기 위해 수수료를 높게 요구할 수밖에 없는 구조다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 8/20] (Duration: 6.45s | Latency: 2921.4ms | RTF: 0.453)
+  REF:  관제탑 지시를 잘못 이해하거나 무시해 여객기가 활주로를 침범하는 사고는 적지 않다
+  PRED: 관제탑 지시를 잘못 이해하거나 무시해 여객기가 활주로를 침범하는 사고는 적지 않다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 9/20] (Duration: 6.18s | Latency: 2322.7ms | RTF: 0.376)
+  REF:  앞서 달리던 대형 트럭을 뒤에서 오던 승용차가 그대로 들이받습니다
+  PRED: 앞서 달리던 대형 트럭을 위해서 오던 승용차가 그대로 들이받았습니다
+  WER:  22.22% | CER: 10.71%
+
+[Sample 10/20] (Duration: 6.54s | Latency: 2217.6ms | RTF: 0.339)
+  REF:  모래시계는 이미 오래 전에 고장이 났고 이제는 더 이상 작동하지 않는 것 같습니다
+  PRED: 모래시계는 이미 오래 전에 고장이 났고 이제는 더 이상 작동하지 않는 것 같습니다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 11/20] (Duration: 16.32s | Latency: 6618.2ms | RTF: 0.406)
+  REF:  서울중앙지검 형사 일 부는 우남찬가를 출품한 장모 씨를 자유경제원이 정보통신망법상 명예훼손 업무방해 사기 등의 혐의로 고소한 사건에 대해 각하처분을 내렸다고 육 일 밝혔다
+  PRED: 서울중앙지검 형사 일 부는 오남창가를 출품한 장모씨를 자유경제원이 정보통신 방법상 명예훼손 업무방해 사기 등의 혐의로 고소한 사건에 대해 각자 저분을 내렸다고 육 일 밝혔다
+  WER:  30.43% | CER: 6.85%
+
+[Sample 12/20] (Duration: 9.52s | Latency: 2982.4ms | RTF: 0.313)
+  REF:  그는 구원파 유병언 회장의 마지막 모습이고 처음 공개되는 것이라며 아마 검찰은 없을 것이라고 자신했다
+  PRED: 그는 구원파 유병헌 회장의 마지막 모습이고 처음 공개되는 것이라며 아마 검찰은 없을 것이라고 자신했다
+  WER:  7.14% | CER: 2.33%
+
+[Sample 13/20] (Duration: 9.95s | Latency: 3412.2ms | RTF: 0.343)
+  REF:  기자 지난달 북한의 지뢰 도발로 중상을 입은 하재헌 하사는 치료를 받으면서도 의연한 모습을 잃지 않고 있습니다
+  PRED: 기자 지난달 북한의 지뢰 도발로 중상을 입은 하지연 화사는 치료를 받으면서도 의연한 모습을 일치하고 있습니다
+  WER:  25.00% | CER: 13.04%
+
+[Sample 14/20] (Duration: 8.39s | Latency: 2821.3ms | RTF: 0.336)
+  REF:  앵커 오늘 새벽 전남 여수에서 오늘 새벽 전남 여수에서 무궁화호 열차가 탈선했습니다
+  PRED: �커 오늘 새벽 전남 여수에서 오늘 새박 전남여수에서 무궁화호 열차가 탈선했습니다
+  WER:  33.33% | CER: 5.71%
+
+[Sample 15/20] (Duration: 9.79s | Latency: 3144.7ms | RTF: 0.321)
+  REF:  쉬면서 내가 있어야 할 자리를 찾아갈 수 있는 계기를 살펴야 할 것 같았어요 조직의 경직성 문제가 있다고 보시나요
+  PRED: 쉬면서 내가 있어야 할 자리를 찾아갈 수 있는 계기를 살펴야 할 것 같았어요 조직의 경직성 문제가 있다고 보시나요
+  WER:  0.00% | CER: 0.00%
+
+[Sample 16/20] (Duration: 6.97s | Latency: 2976.9ms | RTF: 0.427)
+  REF:  호남은 역대 대선에서 특정 후보에게 표를 몰아주는 전략적 선택을 해왔다
+  PRED: 호남은 역대 대선에서 특정 후보에게 표를 몰아주는 정략적 선택을 해왔다
+  WER:  10.00% | CER: 3.33%
+
+[Sample 17/20] (Duration: 9.15s | Latency: 5068.4ms | RTF: 0.554)
+  REF:  입소문이 나자 낙동강유역환경청은 지난해 삼 월 뉴트리아 퇴치전담반을 꾸리고 전씨를 퇴치반장으로 스카우트했다
+  PRED: 이 소문이 나자 낙동강 유역 환경청은 지난해 삼 월 뉴트리어 퇴치 전담반을 꾸리고 전씨를 퇴식장관으로 스카우트했다
+  WER:  75.00% | CER: 10.42%
+
+[Sample 18/20] (Duration: 6.55s | Latency: 2131.1ms | RTF: 0.325)
+  REF:  이는 인사권자인 박근혜 대통령에게도 부담으로 작용할 수 있다
+  PRED: 이는 인사권자인 박근혜 대통령에도 부담으로 작용할 수 있다
+  WER:  12.50% | CER: 3.85%
+
+[Sample 19/20] (Duration: 17.10s | Latency: 6226.8ms | RTF: 0.364)
+  REF:  천 구백 칠십 년대 초반 십 이 월 하순이었던 지구 용량 초과의 날은 천 구백 구십 년대 들어 시 월 이천 년대 들어 구 월 이천 십 년대 들어 팔 월로 각각 앞당겨졌다
+  PRED: 천 구백 칠십 년대 초반 십 이 월 하순이었던 지구 용량 초과의 날은 천 구백 구십 년 대 들어 십 시 월 천대 들어 구 월 이천 십 년 들어 팔 월로 각각 앞당겨졌다
+  WER:  18.18% | CER: 6.45%
+
+[Sample 20/20] (Duration: 10.73s | Latency: 4744.9ms | RTF: 0.442)
+  REF:  하지만 최저임금 협상을 앞둔 시점에서 정치권이 과도한 인상 공약으로 기대심리만 높여놓는 것은 포퓰리즘에 불과하다는 지적도 나온다
+  PRED: 하지만 최저임금 협상을 앞둔 시점에서 정치권이 과도한 인상 공약으로 기대심리만 높여놓는 것은 포퓰리즘에 불과하다는 지적도 나온다
+  WER:  0.00% | CER: 0.00%
+
+==================== BENCHMARK SUMMARY ====================
+Manifest:           artifacts/manifests/zeroth_v1.dev.jsonl
+Samples evaluated:  20
+Average WER:        13.74%
+Average CER:        3.75%
+Overall RTF:        0.389 (Audio: 175.7s, Time: 68.4s)
+Peak VRAM:          3663.9 MB (3.58 GB)
+===========================================================
+

@@ -1,0 +1,26 @@
+{
+  "model_id": "BuzzASR/korean",
+  "lora_r": 64,
+  "lora_alpha": 128,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "out_proj",
+    "fc1",
+    "fc2"
+  ],
+  "max_steps": 2457,
+  "effective_batch": 16,
+  "ko_train_rows": 19651,
+  "en_train_rows": 28539,
+  "cs_train_rows": 800,
+  "mix_ratios": {
+    "ko": 0.5,
+    "en": 0.35,
+    "cs": 0.15
+  },
+  "loanwords_prob": 0.3,
+  "seed": 42,
+  "pilot": false
+}

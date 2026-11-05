@@ -1,0 +1,125 @@
+
+=======================================================
+Loading Model: BuzzASR/korean
+LoRA Adapter:  artifacts/checkpoints/buzzasr_lora_v3/final
+Device: cuda
+GPU: NVIDIA RTX A4000
+Initial VRAM Allocated: 0.00 MB
+=======================================================
+Loading weights:   0%|          | 0/1259 [00:00<?, ?it/s]Loading weights:   1%|          | 9/1259 [00:00<00:20, 59.71it/s]Loading weights:   1%|▏         | 16/1259 [00:00<00:19, 63.79it/s]Loading weights:   3%|▎         | 33/1259 [00:00<00:12, 94.73it/s]Loading weights:   4%|▍         | 51/1259 [00:00<00:11, 105.68it/s]Loading weights:   5%|▍         | 62/1259 [00:00<00:11, 103.20it/s]Loading weights:   6%|▌         | 78/1259 [00:00<00:10, 112.10it/s]Loading weights:   7%|▋         | 90/1259 [00:00<00:12, 95.97it/s] Loading weights:   8%|▊         | 100/1259 [00:01<00:14, 79.99it/s]Loading weights:   9%|▊         | 109/1259 [00:01<00:15, 74.36it/s]Loading weights:   9%|▉         | 117/1259 [00:01<00:16, 67.24it/s]Loading weights:  10%|█         | 129/1259 [00:01<00:15, 73.71it/s]Loading weights:  11%|█         | 139/1259 [00:01<00:15, 71.57it/s]Loading weights:  12%|█▏        | 148/1259 [00:01<00:14, 75.02it/s]Loading weights:  14%|█▎        | 172/1259 [00:01<00:11, 96.85it/s]Loading weights:  14%|█▍        | 182/1259 [00:02<00:16, 64.20it/s]Loading weights: 100%|██████████| 1259/1259 [00:02<00:00, 531.51it/s]
+[transformers] Passing `generation_config` together with generation-related arguments=({'begin_suppress_tokens', 'suppress_tokens'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer WhisperTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+Loading LoRA adapter from artifacts/checkpoints/buzzasr_lora_v3/final...
+Model loaded in 9.28s. VRAM allocated: 3392.22 MB
+
+--- Running benchmark on local manifest: artifacts/manifests/librispeech_v1.dev.jsonl (limit=20) ---
+
+[Sample 1/20] (Duration: 5.86s | Latency: 2580.0ms | RTF: 0.441)
+  REF:  MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL
+  PRED: mr quilter is the apostle of the middle classes and we are glad to welcome his gospel
+  WER:  5.88% | CER: 5.48%
+
+[Sample 2/20] (Duration: 4.82s | Latency: 1349.0ms | RTF: 0.280)
+  REF:  NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER
+  PRED: nor is mr quilter's manner less interesting than his matter
+  WER:  9.09% | CER: 7.55%
+
+[Sample 3/20] (Duration: 12.48s | Latency: 3220.2ms | RTF: 0.258)
+  REF:  HE TELLS US THAT AT THIS FESTIVE SEASON OF THE YEAR WITH CHRISTMAS AND ROAST BEEF LOOMING BEFORE US SIMILES DRAWN FROM EATING AND ITS RESULTS OCCUR MOST READILY TO THE MIND
+  PRED: he tells us that at this festive season of the year with christmas and roast beef looming before us similes drawn from eating and its results occur most readily to the mind
+  WER:  0.00% | CER: 0.00%
+
+[Sample 4/20] (Duration: 9.90s | Latency: 3165.0ms | RTF: 0.320)
+  REF:  HE HAS GRAVE DOUBTS WHETHER SIR FREDERICK LEIGHTON'S WORK IS REALLY GREEK AFTER ALL AND CAN DISCOVER IN IT BUT LITTLE OF ROCKY ITHACA
+  PRED: he has grave doubts whether sir frederick leighton is work is really greek after all and can discover in it but little of rocky ithaca
+  WER:  4.00% | CER: 0.92%
+
+[Sample 5/20] (Duration: 29.40s | Latency: 12624.4ms | RTF: 0.429)
+  REF:  LINNELL'S PICTURES ARE A SORT OF UP GUARDS AND AT EM PAINTINGS AND MASON'S EXQUISITE IDYLLS ARE AS NATIONAL AS A JINGO POEM MISTER BIRKET FOSTER'S LANDSCAPES SMILE AT ONE MUCH IN THE SAME WAY THAT MISTER CARKER USED TO FLASH HIS TEETH AND MISTER JOHN COLLIER GIVES HIS SITTER A CHEERFUL SLAP ON THE BACK BEFORE HE SAYS LIKE A SHAMPOOER IN A TURKISH BATH NEXT MAN
+  PRED: 리넬의 사진은 어떤 아드워드과 암을 향한 그림이고 메이슨의 인기적인 이들들은 징고가 아닌 난리적이며 잉글링이 있는 것이다 미스터 버켓 포스터의 시각은 그저 같은 방식으로 웃는 게 아니라 미스터 카커가 입에 흘러내릴 때까지도 하고 있다 그리고 미스터 존 콜리어는 앉아있는 사람에게 즐거운 슬랍을 주다니면서 앞서 말하자 마치 샘푸러와 툭툭하는 자의 다음 남자
+  WER:  100.00% | CER: 100.00%
+
+[Sample 6/20] (Duration: 9.01s | Latency: 1852.1ms | RTF: 0.206)
+  REF:  IT IS OBVIOUSLY UNNECESSARY FOR US TO POINT OUT HOW LUMINOUS THESE CRITICISMS ARE HOW DELICATE IN EXPRESSION
+  PRED: it is obviously unnecessary for us to point out how luminous these criticisms arehow delicate in expression
+  WER:  11.11% | CER: 0.00%
+
+[Sample 7/20] (Duration: 5.64s | Latency: 1578.4ms | RTF: 0.280)
+  REF:  ON THE GENERAL PRINCIPLES OF ART MISTER QUILTER WRITES WITH EQUAL LUCIDITY
+  PRED: on the general principles of art mr krilter writes with equal lucidity
+  WER:  16.67% | CER: 9.52%
+
+[Sample 8/20] (Duration: 9.24s | Latency: 2087.6ms | RTF: 0.226)
+  REF:  PAINTING HE TELLS US IS OF A DIFFERENT QUALITY TO MATHEMATICS AND FINISH IN ART IS ADDING MORE FACT
+  PRED: painting he tells us is of a different quality to mathematics and finish in art is adding more fact
+  WER:  0.00% | CER: 0.00%
+
+[Sample 9/20] (Duration: 5.12s | Latency: 1480.5ms | RTF: 0.289)
+  REF:  AS FOR ETCHINGS THEY ARE OF TWO KINDS BRITISH AND FOREIGN
+  PRED: as for etchings they are of two kinds british and foreign
+  WER:  0.00% | CER: 0.00%
+
+[Sample 10/20] (Duration: 18.29s | Latency: 4787.8ms | RTF: 0.262)
+  REF:  HE LAMENTS MOST BITTERLY THE DIVORCE THAT HAS BEEN MADE BETWEEN DECORATIVE ART AND WHAT WE USUALLY CALL PICTURES MAKES THE CUSTOMARY APPEAL TO THE LAST JUDGMENT AND REMINDS US THAT IN THE GREAT DAYS OF ART MICHAEL ANGELO WAS THE FURNISHING UPHOLSTERER
+  PRED: he laments most bitterly the divorce that has been made between decorative art and what we usually call pictures makes a customary appeal to the last judgment and reminds us that in the great days of art michelangelo was the furnishing upholsterer
+  WER:  6.98% | CER: 1.91%
+
+[Sample 11/20] (Duration: 5.60s | Latency: 2712.6ms | RTF: 0.484)
+  REF:  NEAR THE FIRE AND THE ORNAMENTS FRED BROUGHT HOME FROM INDIA ON THE MANTEL BOARD
+  PRED: NEAR THE FIRE AND THE ORNAMENTS FRED BROUGHT HOME FROM INDIA ON THE MENTAL BOARD
+  WER:  6.67% | CER: 3.03%
+
+[Sample 12/20] (Duration: 15.12s | Latency: 3506.1ms | RTF: 0.232)
+  REF:  IN FACT HE IS QUITE SEVERE ON MISTER RUSKIN FOR NOT RECOGNISING THAT A PICTURE SHOULD DENOTE THE FRAILTY OF MAN AND REMARKS WITH PLEASING COURTESY AND FELICITOUS GRACE THAT MANY PHASES OF FEELING
+  PRED: in fact he is quite severe on mr ruskin for not recognizing that a picture should denote the frailty of man and remarks with pleasing courtesy in felicitous grace that many phases of feeling
+  WER:  8.82% | CER: 4.32%
+
+[Sample 13/20] (Duration: 5.38s | Latency: 1074.0ms | RTF: 0.200)
+  REF:  ONLY UNFORTUNATELY HIS OWN WORK NEVER DOES GET GOOD
+  PRED: only unfortunately his own work never does get good
+  WER:  0.00% | CER: 0.00%
+
+[Sample 14/20] (Duration: 7.10s | Latency: 3461.9ms | RTF: 0.488)
+  REF:  MISTER QUILTER HAS MISSED HIS CHANCE FOR HE HAS FAILED EVEN TO MAKE HIMSELF THE TUPPER OF PAINTING
+  PRED: MISTER QUILTER HAS MISSED HIS CHANCE FOR HE HAS FAILED EVEN TO MAKE HIMSELF THE TUPPER OF PAINTING
+  WER:  0.00% | CER: 0.00%
+
+[Sample 15/20] (Duration: 2.25s | Latency: 927.4ms | RTF: 0.413)
+  REF:  BY HARRY QUILTER M A
+  PRED: by harry quilter m a
+  WER:  0.00% | CER: 0.00%
+
+[Sample 16/20] (Duration: 10.88s | Latency: 2984.3ms | RTF: 0.274)
+  REF:  BECAUSE YOU WERE SLEEPING INSTEAD OF CONQUERING THE LOVELY ROSE PRINCESS HAS BECOME A FIDDLE WITHOUT A BOW WHILE POOR SHAGGY SITS THERE A COOING DOVE
+  PRED: because you are sleeping instead of conquering the lovely rose princess has become a fiddle without a bow while poor shaggy sits there a cooing dove
+  WER:  3.85% | CER: 1.61%
+
+[Sample 17/20] (Duration: 11.13s | Latency: 3067.7ms | RTF: 0.276)
+  REF:  HE HAS GONE AND GONE FOR GOOD ANSWERED POLYCHROME WHO HAD MANAGED TO SQUEEZE INTO THE ROOM BESIDE THE DRAGON AND HAD WITNESSED THE OCCURRENCES WITH MUCH INTEREST
+  PRED: he has gone and gone for good answered polychrome who had managed to squeeze into the room beside the dragon and had witnessed the occurrences with much interest
+  WER:  0.00% | CER: 0.00%
+
+[Sample 18/20] (Duration: 11.47s | Latency: 3001.1ms | RTF: 0.262)
+  REF:  I HAVE REMAINED A PRISONER ONLY BECAUSE I WISHED TO BE ONE AND WITH THIS HE STEPPED FORWARD AND BURST THE STOUT CHAINS AS EASILY AS IF THEY HAD BEEN THREADS
+  PRED: i have remained a prisoner only because i wished to be one and with this he stepped forward and burst the stout chains as easily as if they had been threads
+  WER:  0.00% | CER: 0.00%
+
+[Sample 19/20] (Duration: 4.75s | Latency: 1664.1ms | RTF: 0.350)
+  REF:  THE LITTLE GIRL HAD BEEN ASLEEP BUT SHE HEARD THE RAPS AND OPENED THE DOOR
+  PRED: the little girl had been asleep but she heard the raps and opened the door
+  WER:  0.00% | CER: 0.00%
+
+[Sample 20/20] (Duration: 4.22s | Latency: 1373.5ms | RTF: 0.325)
+  REF:  THE KING HAS FLED IN DISGRACE AND YOUR FRIENDS ARE ASKING FOR YOU
+  PRED: the king is full of disgrace and your friends are asking for you
+  WER:  23.08% | CER: 13.21%
+
+==================== BENCHMARK SUMMARY ====================
+Manifest:           artifacts/manifests/librispeech_v1.dev.jsonl
+Samples evaluated:  20
+Average WER:        9.81%
+Average CER:        7.38%
+Overall RTF:        0.312 (Audio: 187.7s, Time: 58.5s)
+Peak VRAM:          3667.1 MB (3.58 GB)
+===========================================================
+

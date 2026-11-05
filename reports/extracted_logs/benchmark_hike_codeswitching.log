@@ -1,0 +1,275 @@
+
+=======================================================
+Loading Model: BuzzASR/korean
+LoRA Adapter:  artifacts/checkpoints/buzzasr_lora_v3/final
+Device: cuda
+GPU: NVIDIA RTX A4000
+Initial VRAM Allocated: 0.00 MB
+=======================================================
+Loading weights:   0%|          | 0/1259 [00:00<?, ?it/s]Loading weights:   1%|          | 14/1259 [00:00<00:10, 120.42it/s]Loading weights:   2%|▏         | 27/1259 [00:00<00:14, 87.21it/s] Loading weights:   3%|▎         | 37/1259 [00:00<00:16, 73.55it/s]Loading weights:   4%|▍         | 49/1259 [00:00<00:15, 75.99it/s]Loading weights:   5%|▍         | 60/1259 [00:00<00:14, 84.99it/s]Loading weights:   6%|▌         | 71/1259 [00:00<00:13, 87.76it/s]Loading weights:   8%|▊         | 98/1259 [00:00<00:09, 126.02it/s]Loading weights:   9%|▉         | 111/1259 [00:01<00:09, 127.01it/s]Loading weights:  10%|▉         | 125/1259 [00:01<00:08, 130.32it/s]Loading weights:  11%|█         | 139/1259 [00:01<00:13, 80.60it/s] Loading weights:  12%|█▏        | 151/1259 [00:01<00:13, 82.81it/s]Loading weights:  13%|█▎        | 161/1259 [00:01<00:17, 64.25it/s]Loading weights:  15%|█▍        | 188/1259 [00:02<00:10, 100.64it/s]Loading weights:  16%|█▌        | 202/1259 [00:02<00:12, 83.75it/s] Loading weights:  17%|█▋        | 214/1259 [00:02<00:12, 80.54it/s]Loading weights:  29%|██▉       | 365/1259 [00:02<00:02, 350.90it/s]Loading weights: 100%|██████████| 1259/1259 [00:02<00:00, 493.64it/s]
+[transformers] Passing `generation_config` together with generation-related arguments=({'suppress_tokens', 'begin_suppress_tokens'}) is deprecated and will be removed in future versions. Please pass either a `generation_config` object OR all generation parameters explicitly, but not both.
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer WhisperTokenizer. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+Loading LoRA adapter from artifacts/checkpoints/buzzasr_lora_v3/final...
+Model loaded in 9.78s. VRAM allocated: 3392.22 MB
+
+--- Running benchmark on local manifest: artifacts/manifests/hike_v1.eval.jsonl (limit=50) ---
+
+[Sample 1/50] (Duration: 4.08s | Latency: 2166.8ms | RTF: 0.531)
+  REF:  api response time이 너무 길어 최적화 작업이 필요해
+  PRED: api response time이 너무 길어 최적화 작업이 필요해
+  WER:  0.00% | CER: 0.00%
+
+[Sample 2/50] (Duration: 14.42s | Latency: 3003.4ms | RTF: 0.208)
+  REF:  아리랑 is considered the unofficial national anthem of korea and has been recognized by unesco as a masterpiece of oral and intangible heritage of humanity
+  PRED: 아리랑 is considered unofficial national anthem of korea and has been recognized by unesco as a masterpiece of oral and intangible heritage of humanity
+  WER:  4.00% | CER: 2.34%
+
+[Sample 3/50] (Duration: 4.89s | Latency: 1706.0ms | RTF: 0.349)
+  REF:  can you랑 could you로 부탁할 때 어떤 게 더 정중한 거야
+  PRED: can you랑 could you로 부탁할 때 어떤 게 더 정중한 거야
+  WER:  0.00% | CER: 0.00%
+
+[Sample 4/50] (Duration: 4.56s | Latency: 1284.1ms | RTF: 0.282)
+  REF:  youre acting like such a typical 막내 always whining
+  PRED: you are acting like such a typical 막내 always whining
+  WER:  22.22% | CER: 2.38%
+
+[Sample 5/50] (Duration: 6.30s | Latency: 1539.3ms | RTF: 0.244)
+  REF:  this groups concept went from 청순 to dark and mature in just one comeback
+  PRED: this group is concept went from 청순 to dark and mature in just one comeback
+  WER:  14.29% | CER: 1.69%
+
+[Sample 6/50] (Duration: 9.48s | Latency: 2159.3ms | RTF: 0.228)
+  REF:  우리 backend api 응답 느린 거 보니까 아마 cache 설정이랑 database query 쪽에 issue 있을 듯
+  PRED: 우리 backend api 응답 느린 거 보니까 아마 cache 설정이랑 database query 쪽에 issue 있을 듯
+  WER:  0.00% | CER: 0.00%
+
+[Sample 7/50] (Duration: 6.60s | Latency: 1777.6ms | RTF: 0.269)
+  REF:  점심시간에 혼자 카페에서 책 읽었는데 actually pretty nice to have some me time
+  PRED: 점심시간에 혼자 cafe에서 책 읽었는데 actually pretty nice to have some me time
+  WER:  7.69% | CER: 8.00%
+
+[Sample 8/50] (Duration: 5.39s | Latency: 1341.1ms | RTF: 0.249)
+  REF:  내일 회의 때 project timeline and milestone update 공유할게
+  PRED: 내일 회의 때 project timeline and milestone update 공유할게
+  WER:  0.00% | CER: 0.00%
+
+[Sample 9/50] (Duration: 3.36s | Latency: 1233.0ms | RTF: 0.367)
+  REF:  우리 code structure 다시 고민해봐야 할 듯
+  PRED: 우리 code structure 다시 고민해 봐야 할 듯
+  WER:  28.57% | CER: 0.00%
+
+[Sample 10/50] (Duration: 10.62s | Latency: 2698.8ms | RTF: 0.254)
+  REF:  한국에서는 식당에서 물을 무료로 주는 게 당연하지만 미국에서는 tap water를 달라고 specifically 요청해야 해
+  PRED: 한국에서는 식당에서 물을 무료로 주는 게 당연하지만 미국에서는 tap water를 달라고 specifically 요청해야 해
+  WER:  0.00% | CER: 0.00%
+
+[Sample 11/50] (Duration: 8.70s | Latency: 2096.5ms | RTF: 0.241)
+  REF:  이번 quarter report는 powerpoint template을 새로 만들어서 overseas client들에게 더 professional하게 보여주자
+  PRED: 이번 quarter report는 powerpoint template을 새로 만들어서 overseas client들에게 더 professional하게 보여주자
+  WER:  0.00% | CER: 0.00%
+
+[Sample 12/50] (Duration: 7.20s | Latency: 2138.3ms | RTF: 0.297)
+  REF:  merge conflict 또 생겼는데 resolve 안 하고 그냥 commit한 사람 진짜 누구야 답답해 죽겠네
+  PRED: merge conflict도 생겼는데 resolve 안 하고 그냥 commit한 사람 진짜 누구야 답답해 죽겠네
+  WER:  14.29% | CER: 2.00%
+
+[Sample 13/50] (Duration: 11.22s | Latency: 3436.3ms | RTF: 0.306)
+  REF:  our experimental setup follows standard benchmarking protocols used in prior studies 실험 구성은 기존 문헌을 최대한 따르되 일부 hardware 조건은 다르다
+  PRED: our experimental setup follows standard benchmarking protocols used in imperial studies 실험 구성은 기존 문허는 최대한 다르되 일부 hardware 조건은 다르다
+  WER:  14.29% | CER: 7.55%
+
+[Sample 14/50] (Duration: 4.08s | Latency: 1073.3ms | RTF: 0.263)
+  REF:  this drama had solid 서사 and great 연출
+  PRED: this drama had solid 서사 and great 연출
+  WER:  0.00% | CER: 0.00%
+
+[Sample 15/50] (Duration: 6.24s | Latency: 1553.9ms | RTF: 0.249)
+  REF:  저건 library에서 제공하는 함수 써도 돼
+  PRED: 저건 라이브러리에서 제공하는 함수 써도 돼
+  WER:  16.67% | CER: 35.00%
+
+[Sample 16/50] (Duration: 8.10s | Latency: 2040.6ms | RTF: 0.252)
+  REF:  remember that 고객의 진짜 needs를 파악하는 것 is the foundation of successful product development
+  PRED: remember that 고객의 진짜 니즈를 파악하는 것 is the foundation of successful product development
+  WER:  7.14% | CER: 6.85%
+
+[Sample 17/50] (Duration: 2.88s | Latency: 581.7ms | RTF: 0.202)
+  REF:  just kidding이지 임마
+  PRED: just kidding이지 뭐
+  WER:  33.33% | CER: 13.33%
+
+[Sample 18/50] (Duration: 5.22s | Latency: 1827.5ms | RTF: 0.350)
+  REF:  우리 팀워크가 요즘 완전 out of sync야 다 따로 놀아
+  PRED: 우리 팀워크가 요즘 완전 out of sync이야 다 따로 놀아
+  WER:  10.00% | CER: 4.00%
+
+[Sample 19/50] (Duration: 15.86s | Latency: 3243.0ms | RTF: 0.204)
+  REF:  수고하셨습니다 literally means thank you for your hard work and it is super common to say this when leaving the office or ending a meeting kind of like saying good job everyone in english
+  PRED: 수고하셨습니다 literally means thank you for your hard work and its super common to say this when leaving the office or ending a meeting kind of like saying good job everyone in english
+  WER:  5.88% | CER: 0.68%
+
+[Sample 20/50] (Duration: 7.08s | Latency: 2010.0ms | RTF: 0.284)
+  REF:  is it rude to say 뭐라고요 if i didnt hear something or should i ask in a softer way
+  PRED: is it rude to say 뭐라고요 if i didnt hear something or should i ask enough of the way
+  WER:  15.79% | CER: 11.29%
+
+[Sample 21/50] (Duration: 4.02s | Latency: 1579.2ms | RTF: 0.393)
+  REF:  이 movie 정말 재밌었는데 ending이 너무 예측 가능해
+  PRED: 이 무비 정말 재밌었는데 엔딩이 너무 예측 가능해
+  WER:  25.00% | CER: 40.74%
+
+[Sample 22/50] (Duration: 3.12s | Latency: 1075.5ms | RTF: 0.345)
+  REF:  그건 cache 문제일 수도 있어 확인해 봐
+  PRED: 그건 cash 문제일 수도 있어 확인해 봐
+  WER:  14.29% | CER: 11.11%
+
+[Sample 23/50] (Duration: 6.78s | Latency: 2213.7ms | RTF: 0.327)
+  REF:  container 설정 이상해서 계속 port 막히는데 infra 팀은 그거 우리 쪽 문제라고만 함
+  PRED: container 설정 이상해서 계속 port 막히는데 infract team은 그거 우리 쪽 문제라고만 함
+  WER:  15.38% | CER: 13.95%
+
+[Sample 24/50] (Duration: 4.54s | Latency: 1177.9ms | RTF: 0.260)
+  REF:  이 bug는 logic 문제라 debugging 오래 걸려
+  PRED: 이 bug는 logic 문제라 debugging 오래 걸려
+  WER:  0.00% | CER: 0.00%
+
+[Sample 25/50] (Duration: 6.11s | Latency: 1592.3ms | RTF: 0.261)
+  REF:  the director really nailed the 정서 that the original webtoon was going for
+  PRED: the director really nailed the 정서 that the original webtoon was going for
+  WER:  0.00% | CER: 0.00%
+
+[Sample 26/50] (Duration: 9.28s | Latency: 2055.2ms | RTF: 0.222)
+  REF:  the new ceo wants to implement a 수직적 hierarchy structure similar to traditional 대기업 management styles
+  PRED: the new ceo wants to implement a 수직적 hierarchy structure similar to traditional 대기업 management styles
+  WER:  0.00% | CER: 0.00%
+
+[Sample 27/50] (Duration: 7.26s | Latency: 2317.9ms | RTF: 0.319)
+  REF:  이 artist의 새 album은 정말 amazing하고 특히 bridge 부분에서 vocal이 완전 stunning해
+  PRED: 이 아티스트의 새 앨범은 정말 amazing하고 특히 bridge 부분에서 보컬이 완전 stunning해
+  WER:  25.00% | CER: 29.09%
+
+[Sample 28/50] (Duration: 12.54s | Latency: 2506.7ms | RTF: 0.200)
+  REF:  when someone says 잘 다녀오세요 its not just have a nice trip but also carries a feeling of care and hoping for a safe return
+  PRED: when someone says 잘 다녀오세요 its not just have a nice trip but also carries a feeling of care and hoping for safe return
+  WER:  4.00% | CER: 1.05%
+
+[Sample 29/50] (Duration: 5.58s | Latency: 1798.1ms | RTF: 0.322)
+  REF:  cell culture conditions를 최적화하여 세포 proliferation을 관찰하였다
+  PRED: cell culture condition를 최적화하여 세포 proliferation을 관찰하였다
+  WER:  14.29% | CER: 2.08%
+
+[Sample 30/50] (Duration: 8.23s | Latency: 2126.1ms | RTF: 0.258)
+  REF:  the presentation was going smoothly until the ceo started asking those 뜬금없는 questions out of nowhere
+  PRED: the presentation was going smoothly until the ceo started asking those 뜬금없는 questions out of nowhere
+  WER:  0.00% | CER: 0.00%
+
+[Sample 31/50] (Duration: 8.34s | Latency: 3045.1ms | RTF: 0.365)
+  REF:  외상 이후 immnoglbulin과 interferon의 생성이 저하되어 환자가 감염과 폐혈증에 취약해질 수 있다
+  PRED: 외상 이후 immunoglobulin과 interferon의 생성이 저하되어 환자가 감염과 피혈증에 취약해질 수 있다
+  WER:  16.67% | CER: 5.77%
+
+[Sample 32/50] (Duration: 7.26s | Latency: 2839.3ms | RTF: 0.391)
+  REF:  본 연구는 생태계 내 biodiversity와 환경 요인 간의 상관관계를 다층적으로 분석하였다
+  PRED: 본 연구는 생태계에 대해 biodiversity와 환경요인 간의 상관관계를 다층적으로 분석하였다
+  WER:  36.36% | CER: 7.14%
+
+[Sample 33/50] (Duration: 5.52s | Latency: 1608.1ms | RTF: 0.291)
+  REF:  itd be nice to gift our overseas partners some premium 홍삼 this year
+  PRED: it would be nice to give our overseas partners some premium 홍삼 this year
+  WER:  23.08% | CER: 10.91%
+
+[Sample 34/50] (Duration: 5.16s | Latency: 924.7ms | RTF: 0.179)
+  REF:  아니 assignment deadline 너무 tight한거 같은데
+  PRED: 아니 assignment deadline 너무 tight한 것 같은데
+  WER:  33.33% | CER: 3.12%
+
+[Sample 35/50] (Duration: 13.86s | Latency: 3508.7ms | RTF: 0.253)
+  REF:  when you want to order food you can say 이것으로 주세요 which means i will take this one or please give me this and it is one of the most practical phrases for travelers in korea
+  PRED: when you want to order food you can say 이것으로 주세요 which means i will take this one or please give me this and its one of the most practical phrases for travelers in korea
+  WER:  5.56% | CER: 0.74%
+
+[Sample 36/50] (Duration: 13.37s | Latency: 2608.3ms | RTF: 0.195)
+  REF:  the study examines how 정부 policy interventions have influenced the corporate governance structures of major 대기업 groups in south korea is financial sector
+  PRED: the study examines how 정부 policy interventions have influenced the corporate governance structure of major 대기업 groups in south korea is financial sector
+  WER:  4.35% | CER: 0.76%
+
+[Sample 37/50] (Duration: 3.78s | Latency: 774.6ms | RTF: 0.205)
+  REF:  what does 눈치 exactly mean
+  PRED: what does 눈치 exactly mean
+  WER:  0.00% | CER: 0.00%
+
+[Sample 38/50] (Duration: 14.09s | Latency: 3560.2ms | RTF: 0.253)
+  REF:  팔만대장경 is the most complete and accurate collection of buddhist texts in 한자 script in the world and is designated as a unesco memory of the world
+  PRED: 팔만대장경 is the most complete and accurate collection of buddhist texts in 한자 script in the world and it is designated as a unesco memory of the world
+  WER:  3.70% | CER: 1.69%
+
+[Sample 39/50] (Duration: 9.12s | Latency: 2329.0ms | RTF: 0.255)
+  REF:  찜질방 offer a unique korean experience where people can relax sleep and enjoy various spa facilities all night long
+  PRED: 찜질방 offers a unique korean experience where people can relax sleep and enjoy various spa facilities all night long
+  WER:  5.26% | CER: 1.05%
+
+[Sample 40/50] (Duration: 7.86s | Latency: 2058.8ms | RTF: 0.262)
+  REF:  이번에 도입한 microservices pattern이 scalability 측면에서 확실히 효과가 있는 것 같아
+  PRED: 이번에 도입한 microservices pattern이 scalability 측면에서 확실히 효과가 있는 것 같아
+  WER:  0.00% | CER: 0.00%
+
+[Sample 41/50] (Duration: 8.38s | Latency: 2133.0ms | RTF: 0.255)
+  REF:  오늘 회의에서 feature 목록 다시 정리하고 repository 정리까지 끝내는 게 목표야
+  PRED: 오늘 회의에서 feature 목록 다시 정리하고 repository 정리까지 끝내는 게 목표야
+  WER:  0.00% | CER: 0.00%
+
+[Sample 42/50] (Duration: 5.10s | Latency: 1266.6ms | RTF: 0.248)
+  REF:  실례합니다 where is the nearest 지하철역
+  PRED: 실례합니다 where is the nearest 지하철역
+  WER:  0.00% | CER: 0.00%
+
+[Sample 43/50] (Duration: 11.79s | Latency: 2191.5ms | RTF: 0.186)
+  REF:  제안된 algorithm은 largescale dataset에서 기존 방법보다 약 15 향상된 accuracy를 보여주었다
+  PRED: 제안된 algorithm은 largescale dataset에서 기존 방법보다 약 15 향상된 accuracy를 보여주었다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 44/50] (Duration: 3.24s | Latency: 937.7ms | RTF: 0.289)
+  REF:  지금 network 상태가 너무 unstable하다
+  PRED: 지금 network 상태가 너무 unstable하다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 45/50] (Duration: 5.85s | Latency: 1798.5ms | RTF: 0.308)
+  REF:  새로운 feature 개발하다가 merge conflict가 너무 많이 발생해서 고생했어
+  PRED: 새로운 feature 개발하다가 merge conflict가 너무 많이 발생해서 고생했어
+  WER:  0.00% | CER: 0.00%
+
+[Sample 46/50] (Duration: 5.16s | Latency: 1780.2ms | RTF: 0.345)
+  REF:  target protein 발현을 위해 recombinant expression vector를 설계하였다
+  PRED: target protein 발현을 위해 recombinant expression vector를 설계하였다
+  WER:  0.00% | CER: 0.00%
+
+[Sample 47/50] (Duration: 4.25s | Latency: 1422.2ms | RTF: 0.335)
+  REF:  프로젝트 성공적으로 launching 해서 너무 기분 좋아
+  PRED: 프로젝트 성공적으로 런칭해서 너무 기분 좋아
+  WER:  28.57% | CER: 34.62%
+
+[Sample 48/50] (Duration: 6.06s | Latency: 1565.1ms | RTF: 0.258)
+  REF:  이 환자 수술 들어가기 전에 atropine 투약해주세요
+  PRED: 이 환자 수술 들어가기 전에 atropine 투약해주세요
+  WER:  0.00% | CER: 0.00%
+
+[Sample 49/50] (Duration: 14.30s | Latency: 4100.7ms | RTF: 0.287)
+  REF:  computer vision 연구에서는 cnn architecture와 attention mechanism을 결합한 hybrid model로 image classification task의 accuracy를 기존 baseline보다 15 향상시켰다
+  PRED: 컴퓨터비전 연구에서는 cnn architecture와 attention mechanism을 결합한 하이브리드 모델로 image classification task의 accuracy를 기존 baseline보다 15 향상시켰다
+  WER:  22.22% | CER: 20.66%
+
+[Sample 50/50] (Duration: 3.78s | Latency: 1259.6ms | RTF: 0.333)
+  REF:  노래가 너무 좋아서 계속 loop 중이야
+  PRED: 노래가 너무 좋아서 계속 우울증이야
+  WER:  33.33% | CER: 29.41%
+
+==================== BENCHMARK SUMMARY ====================
+Manifest:           artifacts/manifests/hike_v1.eval.jsonl
+Samples evaluated:  50
+Average WER:        10.09%
+Average CER:        6.18%
+Overall RTF:        0.268 (Audio: 370.0s, Time: 99.1s)
+Peak VRAM:          3663.9 MB (3.58 GB)
+===========================================================
+
