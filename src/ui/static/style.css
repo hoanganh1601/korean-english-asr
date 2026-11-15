@@ -398,6 +398,11 @@ body {
     color: #22d3ee;
 }
 
+.tag-demo {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+}
+
 /* Action Buttons */
 .action-btn-row {
     margin-top: 20px;

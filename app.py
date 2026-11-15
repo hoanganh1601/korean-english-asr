@@ -25,6 +25,11 @@ CACHE_DIR = PROJECT_ROOT / ".cache" / "huggingface"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 os.environ["HF_HOME"] = str(CACHE_DIR)
 os.environ["TRANSFORMERS_CACHE"] = str(CACHE_DIR / "hub")
+DATASET_ROOT = Path(
+    os.environ.get("ASR_DATASET_ROOT", "/media/icnlab/Data/hoanganh/datasets")
+)
+DEMO_AUDIO_CHUNKS_ROOT = DATASET_ROOT / "audio" / "converted" / "chunks"
+DEMO_TRANSCRIPT_CHUNKS_ROOT = DATASET_ROOT / "audio" / "transcripts" / "chunks"
 
 import jiwer
 import soundfile as sf
@@ -37,10 +42,59 @@ current_model_mode = "lora_v5"  # "lora_v5", "lora_v4", "lora_v3", or "base"
 MANIFEST_LOOKUP: Dict[str, Dict[str, str]] = {}
 
 
+def load_demo_chunk_samples() -> List[Dict[str, Any]]:
+    """Load paired demo audio/text chunks stored outside the repository."""
+    samples: List[Dict[str, Any]] = []
+    if not DEMO_TRANSCRIPT_CHUNKS_ROOT.exists():
+        return samples
+
+    for manifest_path in sorted(
+        DEMO_TRANSCRIPT_CHUNKS_ROOT.glob("*/*_chunk_manifest.json")
+    ):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            collection = manifest_path.parent.name
+            for row in manifest.get("chunks", []):
+                audio_path = Path(row["audio_path"])
+                text_path = Path(row["real_text_draft_path"])
+                if not audio_path.is_file() or not text_path.is_file():
+                    continue
+                reference = text_path.read_text(encoding="utf-8").strip()
+                if not reference:
+                    continue
+                chunk_number = int(row["chunk"])
+                samples.append({
+                    "file": audio_path.name,
+                    "source": f"Demo {collection.upper()} (ASR draft)",
+                    "duration_sec": float(row["duration_sec"]),
+                    "reference": reference,
+                    "label": f"{collection.upper()} • Chunk {chunk_number:02d}",
+                    "sample_type": "demo_chunk",
+                    "reference_status": row.get(
+                        "reference_status",
+                        "ASR_DRAFT_REQUIRES_HUMAN_VERIFICATION",
+                    ),
+                    "url": f"/api/demo-audio/{collection}/{audio_path.name}",
+                })
+        except Exception as exc:
+            print(f"Warning reading demo chunk manifest {manifest_path}: {exc}")
+    return samples
+
+
+def add_demo_chunks_to_lookup(mapping: Dict[str, Dict[str, str]]) -> None:
+    """Merge the latest demo chunk transcripts into filename lookup."""
+    for sample in load_demo_chunk_samples():
+        filename = Path(sample["file"]).name.lower()
+        entry = {"text": sample["reference"], "source": sample["source"]}
+        mapping[filename] = entry
+        mapping[Path(filename).stem] = entry
+
+
 def load_or_build_manifest_lookup() -> Dict[str, Dict[str, str]]:
     """Load precomputed manifest lookup or build from datasets/manifests."""
     global MANIFEST_LOOKUP
     if MANIFEST_LOOKUP:
+        add_demo_chunks_to_lookup(MANIFEST_LOOKUP)
         return MANIFEST_LOOKUP
 
     cache_file = PROJECT_ROOT / ".cache" / "manifest_lookup.json"
@@ -49,6 +103,7 @@ def load_or_build_manifest_lookup() -> Dict[str, Dict[str, str]]:
             print("Loading manifest lookup index from cache...")
             with open(cache_file, "r", encoding="utf-8") as f:
                 MANIFEST_LOOKUP = json.load(f)
+            add_demo_chunks_to_lookup(MANIFEST_LOOKUP)
             print(f"Loaded {len(MANIFEST_LOOKUP):,} indexed audio references.")
             return MANIFEST_LOOKUP
         except Exception as e:
@@ -107,6 +162,7 @@ def load_or_build_manifest_lookup() -> Dict[str, Dict[str, str]]:
     except Exception as e:
         print("Error saving manifest cache:", e)
 
+    add_demo_chunks_to_lookup(mapping)
     MANIFEST_LOOKUP = mapping
     return MANIFEST_LOOKUP
 
@@ -387,13 +443,14 @@ async def handle_index(request):
 
 async def handle_get_samples(request):
     manifest_path = PROJECT_ROOT / "data" / "sample_audios" / "sample_manifest.json"
-    if not manifest_path.exists():
-        return web.json_response([])
-    with open(manifest_path, "r", encoding="utf-8") as f:
-        samples = json.load(f)
+    samples = []
+    if manifest_path.exists():
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            samples = json.load(f)
     for s in samples:
         fname = Path(s["file"]).name
         s["url"] = f"/api/audio/{fname}"
+    samples.extend(load_demo_chunk_samples())
     return web.json_response(samples)
 
 
@@ -411,6 +468,21 @@ async def handle_serve_audio(request):
                 file_path = raw_hike
             else:
                 return web.Response(text="Audio file not found", status=404)
+    return web.FileResponse(file_path)
+
+
+async def handle_serve_demo_audio(request):
+    collection = request.match_info.get("collection", "")
+    filename = Path(request.match_info.get("filename", "")).name
+    collection_root = (DEMO_AUDIO_CHUNKS_ROOT / collection).resolve()
+    file_path = (collection_root / filename).resolve()
+    if (
+        not re.fullmatch(r"v\d+", collection)
+        or file_path.parent != collection_root
+        or file_path.suffix.lower() != ".wav"
+        or not file_path.is_file()
+    ):
+        return web.Response(text="Demo audio file not found", status=404)
     return web.FileResponse(file_path)
 
 
@@ -491,6 +563,7 @@ async def handle_transcribe(request):
         "audio_duration_sec": trans_result["audio_duration_sec"],
         "real_time_factor": trans_result["real_time_factor"],
         "peak_vram_mb": trans_result["peak_vram_mb"],
+        "chunk_count": trans_result.get("chunk_count", 1),
         "audio_url": f"/api/audio/{temp_path.name}",
         "analysis": analysis
     })
@@ -501,6 +574,9 @@ def create_app():
     app.router.add_get("/", handle_index)
     app.router.add_get("/api/samples", handle_get_samples)
     app.router.add_get("/api/audio/{filename}", handle_serve_audio)
+    app.router.add_get(
+        "/api/demo-audio/{collection}/{filename}", handle_serve_demo_audio
+    )
     app.router.add_get("/api/lookup_text", handle_lookup_text)
     app.router.add_post("/api/transcribe", handle_transcribe)
     app.router.add_post("/api/evaluate", handle_evaluate)

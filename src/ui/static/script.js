@@ -168,12 +168,14 @@ async function loadSampleAudios() {
             const btn = document.createElement("button");
             btn.className = "preset-btn";
             const isCS = sample.source.includes("HiKE");
-            const tagClass = isCS ? "tag-cs" : "tag-kr";
-            const tagLabel = isCS ? "Code-Switch" : "Korean";
+            const isDemo = sample.sample_type === "demo_chunk";
+            const tagClass = isDemo ? "tag-demo" : (isCS ? "tag-cs" : "tag-kr");
+            const tagLabel = isDemo ? "Demo 5m" : (isCS ? "Code-Switch" : "Korean");
+            const sampleLabel = sample.label || `Mẫu ${idx + 1}`;
 
             btn.innerHTML = `
                 <span class="preset-tag ${tagClass}">${tagLabel}</span>
-                <span>Mẫu ${idx + 1} (${sample.duration_sec.toFixed(1)}s)</span>
+                <span>${sampleLabel} (${sample.duration_sec.toFixed(1)}s)</span>
             `;
 
             btn.addEventListener("click", () => selectPreset(sample, btn));
@@ -317,7 +319,8 @@ async function runTranscription() {
 
         // Update latency badge
         const latencyMs = Math.round(data.inference_time_sec * 1000);
-        latencyBadge.textContent = `${latencyMs} ms (RTF: ${data.real_time_factor.toFixed(2)})`;
+        const chunkLabel = data.chunk_count > 1 ? ` • ${data.chunk_count} chunks` : "";
+        latencyBadge.textContent = `${latencyMs} ms${chunkLabel} (RTF: ${data.real_time_factor.toFixed(2)})`;
         latencyBadge.style.display = "inline-block";
 
         if (data.analysis) {
@@ -327,7 +330,7 @@ async function runTranscription() {
         }
 
         const totalClientMs = Math.round(performance.now() - startTime);
-        showToast(`Nhận dạng xong trong ${latencyMs} ms (Tổng: ${totalClientMs} ms)!`);
+        showToast(`Nhận dạng xong ${data.chunk_count || 1} đoạn trong ${latencyMs} ms (Tổng: ${totalClientMs} ms)!`);
     } catch (err) {
         console.error("Transcription error:", err);
         showToast(`Lỗi: ${err.message}`);

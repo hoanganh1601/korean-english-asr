@@ -206,7 +206,14 @@ class WhisperASRRunner:
         audio_path: str,
         language: Optional[str] = None,
         prompt: Optional[str] = None,
+        chunk_duration_sec: float = 25.0,
     ) -> Dict[str, Any]:
+        """Transcribe an audio file, chunking long recordings for Whisper.
+
+        Whisper's feature extractor accepts roughly 30 seconds per inference.
+        Files longer than that are split into non-overlapping 25-second windows
+        by default, then the per-window transcripts and timing are aggregated.
+        """
         import soundfile as sf
         audio_data, sr = sf.read(audio_path)
         if audio_data.ndim > 1:
@@ -215,7 +222,71 @@ class WhisperASRRunner:
             import librosa
             audio_data = librosa.resample(audio_data, orig_sr=sr, target_sr=16000)
             sr = 16000
-        return self.transcribe_audio_array(audio_data, sampling_rate=sr, language=language, prompt=prompt)
+
+        audio_duration = len(audio_data) / sr if sr > 0 else 0.0
+        if audio_duration <= 30.0:
+            result = self.transcribe_audio_array(
+                audio_data,
+                sampling_rate=sr,
+                language=language,
+                prompt=prompt,
+            )
+            result["chunk_count"] = 1
+            return result
+
+        chunk_samples = max(1, int(chunk_duration_sec * sr))
+        chunk_starts = list(range(0, len(audio_data), chunk_samples))
+        minimum_tail_samples = int(5.0 * sr)
+        if (
+            len(chunk_starts) > 1
+            and len(audio_data) - chunk_starts[-1] < minimum_tail_samples
+        ):
+            chunk_starts.pop()
+        chunk_count = len(chunk_starts)
+        print(
+            f"Long audio detected ({audio_duration:.1f}s): "
+            f"processing {chunk_count} chunks of up to {chunk_duration_sec:.1f}s...",
+            flush=True,
+        )
+
+        transcripts: List[str] = []
+        total_inference_time = 0.0
+        peak_vram_mb = 0.0
+
+        for chunk_index, start in enumerate(chunk_starts, start=1):
+            end = (
+                chunk_starts[chunk_index]
+                if chunk_index < chunk_count
+                else len(audio_data)
+            )
+            chunk = audio_data[start:end]
+            chunk_result = self.transcribe_audio_array(
+                chunk,
+                sampling_rate=sr,
+                language=language,
+                prompt=prompt,
+            )
+            chunk_text = chunk_result["transcription"].strip()
+            if chunk_text:
+                transcripts.append(chunk_text)
+            total_inference_time += chunk_result["inference_time_sec"]
+            peak_vram_mb = max(peak_vram_mb, chunk_result["peak_vram_mb"])
+            print(
+                f"  Chunk {chunk_index}/{chunk_count} "
+                f"({len(chunk) / sr:.1f}s) -> {chunk_text}",
+                flush=True,
+            )
+
+        return {
+            "transcription": " ".join(transcripts),
+            "inference_time_sec": total_inference_time,
+            "audio_duration_sec": audio_duration,
+            "real_time_factor": (
+                total_inference_time / audio_duration if audio_duration > 0 else 0.0
+            ),
+            "peak_vram_mb": peak_vram_mb,
+            "chunk_count": chunk_count,
+        }
 
 
 def run_benchmark_on_dataset(runner: WhisperASRRunner, dataset_name: str, split: str = "test", limit: int = 10):
