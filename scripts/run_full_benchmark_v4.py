@@ -52,7 +52,7 @@ BENCHMARKS = [
 ]
 
 
-def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
+def evaluate_manifest(runner: WhisperASRRunner, config: dict, cache_tag: str = "") -> dict:
     name = config["name"]
     manifest_path = config["manifest"]
     limit = config["limit"]
@@ -71,7 +71,8 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
             if line.strip():
                 items.append(json.loads(line))
 
-    cache_file = PROJECT_ROOT / "artifacts" / f".bench_cache_{Path(manifest_path).stem}.json"
+    prefix = f".bench_cache_{cache_tag}_" if cache_tag else ".bench_cache_"
+    cache_file = PROJECT_ROOT / "artifacts" / f"{prefix}{Path(manifest_path).stem}.json"
     results = []
     if cache_file.exists():
         try:
@@ -177,9 +178,23 @@ def evaluate_manifest(runner: WhisperASRRunner, config: dict) -> dict:
 
 
 def main():
+    import argparse
+    p = argparse.ArgumentParser(description="Full 1,267-sample bilingual & CS benchmark.")
+    p.add_argument("--adapter", type=str, default=None, help="Override LoRA adapter path.")
+    p.add_argument("--output-json", type=Path, default=None, help="Override output JSON path.")
+    args = p.parse_args()
+
+    v6_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v6_long" / "final"
     v5_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v5_full" / "final"
     v4_path = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_v4" / "final"
-    adapter_path = v5_path if v5_path.exists() else v4_path
+    if args.adapter:
+        adapter_path = Path(args.adapter)
+    elif v6_path.exists():
+        adapter_path = v6_path
+    else:
+        adapter_path = v5_path if v5_path.exists() else v4_path
+
+    cache_tag = "v6" if "v6" in str(adapter_path) else ""
     print(f"\nInitializing BuzzASR + LoRA from {adapter_path}...")
     runner = WhisperASRRunner(
         model_id="BuzzASR/korean",
@@ -193,7 +208,7 @@ def main():
     t_global_start = time.time()
 
     for config in BENCHMARKS:
-        summary = evaluate_manifest(runner, config)
+        summary = evaluate_manifest(runner, config, cache_tag=cache_tag)
         all_summaries.append(summary)
 
     total_time = time.time() - t_global_start
@@ -204,7 +219,15 @@ def main():
     weighted_cer = sum(s["avg_cer_pct"] * s["samples_evaluated"] for s in all_summaries) / total_samples
     overall_rtf = total_infer / total_audio if total_audio > 0 else 0.0
 
-    model_name = "BuzzASR/korean + LoRA v5 Full" if "v5" in str(adapter_path) else "BuzzASR/korean + LoRA v4"
+    if "v6" in str(adapter_path):
+        model_name = "BuzzASR/korean + LoRA v6 Long-Form"
+        default_out = PROJECT_ROOT / "artifacts" / "benchmark_lora_v6_short_results.json"
+    elif "v5" in str(adapter_path):
+        model_name = "BuzzASR/korean + LoRA v5 Full"
+        default_out = PROJECT_ROOT / "artifacts" / "benchmark_lora_v5_full_results.json"
+    else:
+        model_name = "BuzzASR/korean + LoRA v4"
+        default_out = PROJECT_ROOT / "artifacts" / "benchmark_lora_v4_full_results.json"
     final_report = {
         "model": f"{model_name} (Synthetic CS + Loanwords 592)",
         "adapter_path": str(adapter_path),
@@ -219,7 +242,7 @@ def main():
         "benchmarks": all_summaries,
     }
 
-    out_file = PROJECT_ROOT / "artifacts" / ("benchmark_lora_v5_full_results.json" if "v5" in str(adapter_path) else "benchmark_lora_v4_full_results.json")
+    out_file = args.output_json or default_out
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(final_report, f, indent=2, ensure_ascii=False)
 

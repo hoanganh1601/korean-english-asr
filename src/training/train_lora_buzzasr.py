@@ -29,6 +29,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import time
 from pathlib import Path
@@ -62,7 +63,11 @@ from transformers import (
 
 from src.evaluation.buzzasr_runner import compute_cer, compute_wer, normalize_for_evaluation
 from src.training.data_collator import DataCollatorSpeechSeq2SeqWithPadding
-from src.training.manifest_dataset import ManifestDataset
+from src.training.manifest_dataset import (
+    STARTOFPREV_TOKEN,
+    ManifestDataset,
+    YodasLongWindowDataset,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -72,8 +77,9 @@ MANIFESTS = PROJECT_ROOT / "artifacts" / "manifests"
 KO_TRAIN  = MANIFESTS / "zeroth_v1.train.jsonl"
 EN_TRAIN  = MANIFESTS / "librispeech_v1.train.jsonl"
 CS_TRAIN  = MANIFESTS / "hike_v1.train.jsonl"
-SYN_TRAIN = MANIFESTS / "koen_synthetic_v1.train.jsonl"
-KO_DEV    = MANIFESTS / "zeroth_v1.dev.jsonl"
+SYN_TRAIN   = MANIFESTS / "koen_synthetic_v1.train.jsonl"
+YODAS_TRAIN = MANIFESTS / "yodas_long_windows_v1.train.jsonl"
+KO_DEV      = MANIFESTS / "zeroth_v1.dev.jsonl"
 EN_DEV    = MANIFESTS / "librispeech_v1.dev.jsonl"
 CS_DEV    = MANIFESTS / "hike_v1.eval.jsonl"
 LOANWORDS_PATH = PROJECT_ROOT / "artifacts" / "loanwords_dict.json"
@@ -86,12 +92,7 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "artifacts" / "checkpoints" / "buzzasr_lora_
 # ---------------------------------------------------------------------------
 
 class MixedDataset(torch.utils.data.Dataset):
-    """Interleaves Korean, English, Real Code-Switching, and Synthetic Code-Switching utterances.
-
-    Strategy: choose_stream_then_uniform_utterance
-      - Draw stream with P(ko)=0.40, P(en)=0.25, P(cs)=0.15, P(syn)=0.20
-      - Then draw a uniformly random utterance from that pool
-    """
+    """Interleaves Korean, English, Code-Switching, and optional YODAS Long-Form window streams."""
 
     def __init__(
         self,
@@ -99,35 +100,32 @@ class MixedDataset(torch.utils.data.Dataset):
         en_dataset: ManifestDataset,
         cs_dataset: ManifestDataset,
         syn_dataset: ManifestDataset | None = None,
+        yodas_dataset: torch.utils.data.Dataset | None = None,
         *,
         ko_prob: float = 0.40,
         en_prob: float = 0.25,
         cs_prob: float = 0.15,
         syn_prob: float = 0.20,
+        yodas_prob: float = 0.0,
         total_virtual_samples: int,
         seed: int = 42,
         full_dataset: bool = False,
     ) -> None:
-        self.ko = ko_dataset
-        self.en = en_dataset
-        self.cs = cs_dataset
-        self.syn = syn_dataset
         self.full_dataset = full_dataset
+        candidates: list[tuple[str, torch.utils.data.Dataset | None, float]] = [
+            ("ko", ko_dataset, ko_prob),
+            ("en", en_dataset, en_prob),
+            ("cs", cs_dataset, cs_prob),
+            ("syn", syn_dataset, syn_prob),
+            ("yodas", yodas_dataset, yodas_prob),
+        ]
+        active = [(name, ds, prob) for name, ds, prob in candidates if ds is not None and prob > 0.0]
+        if not active:
+            raise ValueError("At least one active dataset stream with positive probability is required.")
 
-        if self.syn is None:
-            # Rebalance without synthetic
-            total_prob = ko_prob + en_prob + cs_prob
-            self.ko_prob = ko_prob / total_prob
-            self.en_prob = en_prob / total_prob
-            self.cs_prob = cs_prob / total_prob
-            self.syn_prob = 0.0
-        else:
-            total_prob = ko_prob + en_prob + cs_prob + syn_prob
-            self.ko_prob = ko_prob / total_prob
-            self.en_prob = en_prob / total_prob
-            self.cs_prob = cs_prob / total_prob
-            self.syn_prob = syn_prob / total_prob
-
+        total_prob = sum(prob for _, _, prob in active)
+        self.datasets: dict[str, torch.utils.data.Dataset] = {name: ds for name, ds, _ in active}
+        self.stream_probs: list[tuple[str, float]] = [(name, prob / total_prob) for name, _, prob in active]
         self.total = total_virtual_samples
         self.rng = random.Random(seed)
         self._build_index()
@@ -135,60 +133,46 @@ class MixedDataset(torch.utils.data.Dataset):
     def _build_index(self) -> None:
         self._index: list[tuple[str, int]] = []
         if self.full_dataset:
-            # Exact exhaustive 100% coverage of all datasets (54,595 unique samples)
-            for i in range(len(self.ko)):
-                self._index.append(("ko", i))
-            for i in range(len(self.en)):
-                self._index.append(("en", i))
-            for i in range(len(self.cs)):
-                self._index.append(("cs", i))
-            if self.syn is not None:
-                for i in range(len(self.syn)):
-                    self._index.append(("syn", i))
+            for name, ds in self.datasets.items():
+                for i in range(len(ds)):
+                    self._index.append((name, i))
             self.rng.shuffle(self._index)
             self.total = len(self._index)
             return
 
         # Shuffled permutation queues without replacement per stream
-        queues: dict[str, list[int]] = {"ko": [], "en": [], "cs": [], "syn": []}
-        datasets_map = {"ko": self.ko, "en": self.en, "cs": self.cs, "syn": self.syn}
+        queues: dict[str, list[int]] = {name: [] for name in self.datasets}
 
         def _next_from_stream(name: str) -> int:
-            ds = datasets_map[name]
+            ds = self.datasets[name]
             if not queues[name]:
                 idxs = list(range(len(ds)))
                 self.rng.shuffle(idxs)
                 queues[name] = idxs
             return queues[name].pop()
 
-        p_ko = self.ko_prob
-        p_en = p_ko + self.en_prob
-        p_cs = p_en + self.cs_prob
+        cumulative: list[tuple[float, str]] = []
+        acc = 0.0
+        for name, prob in self.stream_probs:
+            acc += prob
+            cumulative.append((acc, name))
+        cumulative[-1] = (1.0, cumulative[-1][1])
 
         for _ in range(self.total):
             r = self.rng.random()
-            if r < p_ko:
-                self._index.append(("ko", _next_from_stream("ko")))
-            elif r < p_en:
-                self._index.append(("en", _next_from_stream("en")))
-            elif r < p_cs or self.syn is None:
-                self._index.append(("cs", _next_from_stream("cs")))
-            else:
-                self._index.append(("syn", _next_from_stream("syn")))
+            chosen = cumulative[-1][1]
+            for threshold, name in cumulative:
+                if r < threshold:
+                    chosen = name
+                    break
+            self._index.append((chosen, _next_from_stream(chosen)))
 
     def __len__(self) -> int:
         return self.total
 
     def __getitem__(self, i: int) -> dict[str, Any]:
         stream, idx = self._index[i]
-        if stream == "ko":
-            return self.ko[idx]
-        elif stream == "en":
-            return self.en[idx]
-        elif stream == "cs":
-            return self.cs[idx]
-        else:
-            return self.syn[idx]
+        return self.datasets[stream][idx]
 
 
 # ---------------------------------------------------------------------------
@@ -214,6 +198,9 @@ class SubsetDataset(torch.utils.data.Dataset):
 # Metrics
 # ---------------------------------------------------------------------------
 
+_SPECIAL_TAG_RE = re.compile(r"<\|[^|]+\|>")
+
+
 def compute_metrics_fn(pred: Any, processor: WhisperProcessor) -> dict[str, float]:
     pred_ids = pred.predictions
     label_ids = pred.label_ids
@@ -225,13 +212,15 @@ def compute_metrics_fn(pred: Any, processor: WhisperProcessor) -> dict[str, floa
         label_ids,
     )
 
-    pred_str  = processor.batch_decode(pred_ids,  skip_special_tokens=True)
+    pred_str = processor.batch_decode(pred_ids, skip_special_tokens=True)
     label_str = processor.batch_decode(label_ids, skip_special_tokens=True)
 
     wers, cers = [], []
     for ref, hyp in zip(label_str, pred_str):
-        ref_n = normalize_for_evaluation(ref)
-        hyp_n = normalize_for_evaluation(hyp)
+        ref_clean = _SPECIAL_TAG_RE.sub("", ref)
+        hyp_clean = _SPECIAL_TAG_RE.sub("", hyp)
+        ref_n = normalize_for_evaluation(ref_clean)
+        hyp_n = normalize_for_evaluation(hyp_clean)
         wers.append(compute_wer(ref_n, hyp_n))
         cers.append(compute_cer(ref_n, hyp_n))
 
@@ -292,6 +281,50 @@ def parse_args() -> argparse.Namespace:
         help="Probability of drawing a synthetic Code-Switching utterance (default: 0.20).",
     )
     p.add_argument(
+        "--yodas-prob", type=float, default=0.0,
+        help="Probability of drawing a YODAS Long-Form timestamped context window (default: 0.0).",
+    )
+    p.add_argument(
+        "--yodas-manifest", type=Path, default=YODAS_TRAIN,
+        help="Path to YODAS Long-Form training windows JSONL manifest.",
+    )
+    p.add_argument(
+        "--timestamp-prob", type=float, default=0.0,
+        help="Probability of training short-form KO/EN/CS utterances with 0.02s timestamp tokens (default: 0.0).",
+    )
+    p.add_argument(
+        "--prev-drop-prob", type=float, default=0.10,
+        help="Probability of dropping <|startofprev|> context during YODAS window training (default: 0.10).",
+    )
+    p.add_argument(
+        "--yodas-max-prev-tokens", type=int, default=180,
+        help="Max previous context tokens kept after <|startofprev|> (default: 180).",
+    )
+    p.add_argument(
+        "--yodas-loanwords-prob", type=float, default=0.0,
+        help="Probability of applying Hangul->English loanword augmentation inside YODAS windows (default: 0.0).",
+    )
+    p.add_argument(
+        "--yodas-min-window-sec", type=float, default=0.0,
+        help="Minimum window duration in seconds for YodasLongWindowDataset (default: 0.0).",
+    )
+    p.add_argument(
+        "--yodas-min-segments", type=int, default=1,
+        help="Minimum utterance count per window in YodasLongWindowDataset (default: 1).",
+    )
+    p.add_argument(
+        "--num-workers", type=int, default=4,
+        help="DataLoader worker processes (default: 4).",
+    )
+    p.add_argument(
+        "--eval-steps", type=int, default=None,
+        help="Override evaluation interval in steps.",
+    )
+    p.add_argument(
+        "--save-steps", type=int, default=None,
+        help="Override checkpoint save interval in steps.",
+    )
+    p.add_argument(
         "--batch-size", type=int, default=4,
         help="Per-device train batch size (default: 4). Reduce if OOM.",
     )
@@ -327,7 +360,12 @@ def main() -> int:
         en_count = sum(1 for _ in open(EN_TRAIN, encoding="utf-8") if _.strip())
         cs_count = sum(1 for _ in open(CS_TRAIN, encoding="utf-8") if _.strip())
         syn_count = sum(1 for _ in open(SYN_TRAIN, encoding="utf-8") if _.strip()) if SYN_TRAIN.exists() else 0
-        virtual_epoch = ko_count + en_count + cs_count + syn_count
+        yodas_count = (
+            sum(1 for _ in open(args.yodas_manifest, encoding="utf-8") if _.strip())
+            if (args.yodas_prob > 0 and args.yodas_manifest.exists())
+            else 0
+        )
+        virtual_epoch = ko_count + en_count + cs_count + syn_count + yodas_count
     else:
         virtual_epoch = math.ceil(ko_count / 0.50)  # implied total at 50% KO ratio
     default_steps = math.ceil(virtual_epoch / effective_batch)
@@ -340,9 +378,9 @@ def main() -> int:
         print("\n[PILOT MODE] Running 500-step sanity check.")
     else:
         max_steps = args.max_steps if args.max_steps else default_steps
-        eval_steps = 400 if max_steps > 1000 else 100
-        save_steps = 400 if max_steps > 1000 else 100
-        warmup_steps = max(100, max_steps // 30)
+        eval_steps = args.eval_steps or (400 if max_steps > 1000 else 100)
+        save_steps = args.save_steps or (400 if max_steps > 1000 else 100)
+        warmup_steps = max(50, max_steps // 20)
 
     virtual_total = max_steps * effective_batch
 
@@ -389,6 +427,10 @@ def main() -> int:
     model.generation_config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     model.generation_config.suppress_tokens = []
+    model.generation_config.prev_sot_token_id = STARTOFPREV_TOKEN
+    # Prevent unconstrained greedy loops on short-form validation sentences during trainer.evaluate()
+    model.generation_config.no_repeat_ngram_size = 3
+    model.generation_config.repetition_penalty = 1.2
 
     # Gradient checkpointing saves ~30% VRAM at the cost of ~15% speed
     model.gradient_checkpointing_enable()
@@ -437,25 +479,52 @@ def main() -> int:
 
     ko_train_ds = ManifestDataset(
         KO_TRAIN, processor, shuffle=True, seed=args.seed,
-        loanwords_dict=loanwords_dict, loanwords_prob=args.loanwords_prob
+        loanwords_dict=loanwords_dict, loanwords_prob=args.loanwords_prob,
+        timestamp_prob=args.timestamp_prob,
     )
-    en_train_ds = ManifestDataset(EN_TRAIN, processor, language="en", shuffle=True, seed=args.seed)
-    cs_train_ds = ManifestDataset(CS_TRAIN, processor, shuffle=True, seed=args.seed)
+    en_train_ds = ManifestDataset(
+        EN_TRAIN, processor, language="en", shuffle=True, seed=args.seed,
+        timestamp_prob=args.timestamp_prob,
+    )
+    cs_train_ds = ManifestDataset(
+        CS_TRAIN, processor, shuffle=True, seed=args.seed,
+        timestamp_prob=args.timestamp_prob,
+    )
 
     syn_train_ds = None
     if SYN_TRAIN.exists() and args.syn_prob > 0:
-        syn_train_ds = ManifestDataset(SYN_TRAIN, processor, shuffle=True, seed=args.seed)
+        syn_train_ds = ManifestDataset(
+            SYN_TRAIN, processor, shuffle=True, seed=args.seed,
+            timestamp_prob=args.timestamp_prob,
+        )
         print(f"  Loaded {len(syn_train_ds)} synthetic CS utterances from {SYN_TRAIN.name}.")
+
+    yodas_train_ds = None
+    if args.yodas_prob > 0 and args.yodas_manifest.exists():
+        yodas_train_ds = YodasLongWindowDataset(
+            args.yodas_manifest,
+            processor,
+            shuffle=True,
+            seed=args.seed,
+            max_prev_tokens=args.yodas_max_prev_tokens,
+            prev_drop_prob=args.prev_drop_prob,
+            loanwords_dict=loanwords_dict,
+            loanwords_prob=args.yodas_loanwords_prob,
+            min_window_sec=args.yodas_min_window_sec,
+            min_segments=args.yodas_min_segments,
+        )
 
     train_ds = MixedDataset(
         ko_train_ds,
         en_train_ds,
         cs_train_ds,
         syn_dataset=syn_train_ds,
+        yodas_dataset=yodas_train_ds,
         ko_prob=args.ko_prob,
         en_prob=args.en_prob,
         cs_prob=args.cs_prob,
         syn_prob=args.syn_prob,
+        yodas_prob=args.yodas_prob,
         total_virtual_samples=virtual_total,
         seed=args.seed,
         full_dataset=args.full_dataset,
@@ -500,14 +569,14 @@ def main() -> int:
         # Mixed precision
         fp16=True,
         gradient_checkpointing=True,
-        # Data loading — 4 workers overlap disk I/O with GPU compute
-        dataloader_num_workers=4,
+        # Data loading — overlap disk/TAR I/O with GPU compute
+        dataloader_num_workers=args.num_workers,
         dataloader_pin_memory=True,
         # Evaluation
         eval_strategy="steps",
         eval_steps=eval_steps,
         predict_with_generate=True,
-        generation_max_length=225,
+        generation_max_length=320,
         # Saving
         save_strategy="steps",
         save_steps=save_steps,
@@ -576,7 +645,16 @@ def main() -> int:
         "en_train_rows": len(en_train_ds),
         "cs_train_rows": len(cs_train_ds),
         "syn_train_rows": len(syn_train_ds) if syn_train_ds else 0,
-        "mix_ratios": {"ko": args.ko_prob, "en": args.en_prob, "cs": args.cs_prob, "syn": args.syn_prob},
+        "yodas_train_rows": len(yodas_train_ds) if yodas_train_ds else 0,
+        "mix_ratios": {
+            "ko": args.ko_prob,
+            "en": args.en_prob,
+            "cs": args.cs_prob,
+            "syn": args.syn_prob,
+            "yodas": args.yodas_prob,
+        },
+        "timestamp_prob": args.timestamp_prob,
+        "prev_drop_prob": args.prev_drop_prob,
         "loanwords_prob": args.loanwords_prob,
         "seed": args.seed,
         "pilot": args.pilot,

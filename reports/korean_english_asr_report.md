@@ -3,7 +3,7 @@
 **Dự án:** Huấn luyện mô hình nhận dạng giọng nói tiếng Hàn chèn tiếng Anh (Korean–English Code-Switching ASR)  
 **Mô hình nền:** `BuzzASR/korean` (Dựa trên kiến trúc Whisper Large, 1.55 tỷ tham số)  
 **Phần cứng thực nghiệm:** 01 GPU NVIDIA RTX A4000 (16 GB VRAM) | Windows OS | PyTorch FP16  
-**Kết quả cốt lõi:** Kéo tỷ lệ lỗi từ (WER) câu nói trộn Hàn – Anh từ **53.30%** xuống **4.95%** (LoRA v5 Full), tổng thể 3 bộ dữ liệu (1,267 mẫu) đạt **WER 3.86%**, bảo toàn và nâng cao vượt bậc độ chính xác tiếng Hàn thuần (**CER 1.62%**) và tiếng Anh chuẩn (**WER 2.94%**).
+**Kết quả cốt lõi:** Kéo tỷ lệ lỗi từ (WER) câu nói trộn Hàn – Anh từ **53.30%** xuống **4.95%** (`LoRA v5 Full`) / **5.11%** (`LoRA v6.1`), tổng thể 3 bộ Short-Form (`1,267` mẫu) đạt **3.86% WER** (`v5 Full`) và **3.91% WER** (`v6.1`), đồng thời giải quyết bài toán **Long-Form 5–10+ phút** bằng kiến trúc `vad_split` đạt **7.61%–8.10% WER (2.72%–3.44% CER)** trên nội dung chuẩn (`v6.1`) và **13.10% WER** chép nguyên văn khẩu ngữ tự do (`v5 Full`).
 
 ---
 
@@ -400,3 +400,166 @@ Sau khi hoàn tất xuất xưởng Adapter LoRA v5 Full, toàn bộ 1,267 mẫu
    - Trọng số LoRA Adapter v5 Final: [`artifacts/checkpoints/buzzasr_lora_v5_full/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v5_full/final) (461.5 MB).
    - Dữ liệu kết quả nghiệm thu chi tiết từng mẫu: [`artifacts/benchmark_lora_v5_full_results.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_lora_v5_full_results.json).
    - Giao diện Web Studio tương tác trực quan: [`app.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/app.py) đã tích hợp sẵn sàng ở cổng `http://localhost:7860`.
+
+---
+
+## 13. Nâng cấp Long-Form ASR cho Hội thoại dài (`LoRA v6 Long-Form` – `yodas-ko-200h-v1`)
+
+### 13.1 Bối cảnh nâng cấp & Nguồn dữ liệu `yodas-ko-200h-v1`
+
+Mô hình `LoRA v5 Full` chỉ được huấn luyện trên clip ngắn $\le 30$ giây với chế độ `<|notimestamps|>`, dẫn tới hiện tượng bỏ sót phân đoạn (chỉ tách 8/34 segment trên tin tức 161s và 34/81 segment trên video 5 phút) khi đưa thẳng audio dài nhiều phút vào pipeline nhận dạng liên tục. Để đáp ứng yêu cầu **đưa nguyên file âm thanh dài (không chunk thủ công)** mà vẫn giữ mạch văn bản và bảo toàn năng lực Code-Switching Hàn – Anh, dự án đã huấn luyện tiếp bản **`LoRA v6 Long-Form`** từ dữ liệu [`yodas-ko-200h-v1`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/data/longaudio/yodas-ko-200h-v1):
+
+| Tập dữ liệu (Manifest) | Quy mô | Thời lượng | Vai trò |
+|---|---:|---:|---|
+| [`yodas_long_windows_v1.train.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_windows_v1.train.jsonl) | 30,307 cửa sổ ($\le 29.0$s) | 212.41 giờ | Huấn luyện nối tiếp đa câu + timestamp tokens + `<\|startofprev\|>` |
+| [`yodas_long_v1.dev.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_v1.dev.jsonl) | 119 video gốc | 11.39 giờ | Đánh giá trên nguyên video liên tục |
+| [`yodas_long_v1.test.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_v1.test.jsonl) | 123 video gốc *(106 video >30s; 9 video chứa caption rác YouTube `♪`/`♬`/`&lt;`/`&gt;`/`저작권자`)* | 11.01 giờ | Kiểm thử Long-Form độc lập không chunk |
+
+---
+
+### 13.2 Cấu hình Huấn luyện & Quá trình Hội tụ (`LoRA v6 Long-Form`)
+
+* **Khởi tạo (Warm-Start):** Tiếp tục từ [`artifacts/checkpoints/buzzasr_lora_v5_full/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v5_full/final) trên nền `BuzzASR/korean` ([`run_summary.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/run_summary.json)).
+* **Kiến trúc LoRA & Siêu tham số:** `r = 64`, `lora_alpha = 128`, `target_modules = [q_proj, k_proj, v_proj, out_proj, fc1, fc2]`, `learning_rate = 3e-5`, `max_steps = 800`, `effective_batch = 16`, `timestamp_prob = 0.35`, `prev_drop_prob = 0.10`, `loanwords_prob = 0.75`.
+* **Tỷ lệ phối trộn 5 luồng dữ liệu (5-Way Mixture):**
+
+| Luồng dữ liệu | Số mẫu train | Tỷ lệ lấy mẫu trong batch | Mục tiêu |
+|---|---:|---:|---|
+| YODAS Long-Form Windows (`yodas`) | 30,307 | **55%** | Học căn chỉnh timestamp Whisper, chuyển tiếp ranh giới 30s và ngữ cảnh `<\|startofprev\|>` |
+| Syn Loanwords / Script-Switch (`syn`) | 5,605 | **12%** | Giữ cơ chế giữ nguyên chữ Latinh cho từ mượn Anh – Hàn |
+| Zeroth Korean (`ko`) | 19,651 | **12%** | Bảo toàn độ chính xác tiếng Hàn chuẩn |
+| HiKE Code-Switching (`cs`) | 800 | **11%** | Bảo toàn độ chính xác hội thoại trộn Hàn – Anh thực tế |
+| LibriSpeech English (`en`) | 28,539 | **10%** | Ngăn quên tiếng Anh thuần |
+
+* **Đường cong hội tụ & Danh sách Checkpoint ([`trainer_state.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/checkpoint-800/trainer_state.json)):**
+
+| Checkpoint / Mốc Step | Epoch | Train Loss | Eval Loss | Eval WER | Eval CER | Dung lượng thư mục | Đánh giá & Lưu trữ |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| [`checkpoint-200`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/checkpoint-200) | 0.25 | 3.433 | 0.1534 | 27.98% | 24.06% | 1,321.00 MB | Mốc `best_metric` tự động ban đầu của Trainer |
+| Step 400 *(không lưu thư mục)* | 0.50 | 3.381 | 0.1715 | 32.21% | 27.47% | — | Đã xoay vòng theo `save_total_limit` |
+| [`checkpoint-600`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/checkpoint-600) | 0.75 | 3.047 | 0.1737 | 32.21% | 27.47% | 1,321.00 MB | Checkpoint trung gian |
+| ⭐ [`checkpoint-800`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/checkpoint-800) | **1.00** | **2.602** | 0.1646 | 28.80% | 24.49% | 1,321.00 MB | **Tốt nhất — train đủ 100% lịch trình (đủ state để resume)** |
+| 🏆 [`final/`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_long/final) | **1.00** | **2.602** | — | — | — | **443.90 MB** *(adapter `440.14 MB`)* | **Đã chép từ `checkpoint-800` làm bản triển khai chính thức** |
+
+* **Sửa lỗi suy luận Long-Form trong [`src/evaluation/buzzasr_runner.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/evaluation/buzzasr_runner.py):**
+  1. Thiết lập `generation_config.prev_sot_token_id = 50362` (`<|startofprev|>`) vì `suppress_tokens=[]` làm mất tham chiếu mặc định `suppress_tokens[-2]`.
+  2. Gỡ `no_repeat_ngram_size=3` và `repetition_penalty=1.2` khỏi nhánh `is_long_form` (hai tham số này cấm lặp từ khóa miền chuyên ngành đã xuất hiện ở câu trước, làm WER video `2jwkCBzthu8` từng vọt lên 25.67% và tụt về **6.78%** ngay sau khi gỡ).
+  3. Giới hạn fallback `temperature=(0.0, 0.2)`, `compression_ratio_threshold=2.4`, `logprob_threshold=-1.0`, `no_speech_threshold=0.6`, `task="transcribe"`.
+
+---
+
+### 13.3 Kết quả Thực nghiệm Long-Form & Ablation Context Carry-Over
+
+Đánh giá trực tiếp trên file audio gốc từ [`yodas_long_v1.test.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_v1.test.jsonl) (`--exclude-caption-artifacts --min-dur 60 --max-dur 420`) đối chiếu giữa **`LoRA v5 Full`** ([`benchmark_longform_v5_clean5.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v5_clean5.json)), **`LoRA v6` (`ctx_on`)** ([`benchmark_longform_v6_clean8_ctx_on.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v6_clean8_ctx_on.json)) và **`LoRA v6` (`ctx_off`)** ([`benchmark_longform_v6_clean8_ctx_off.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v6_clean8_ctx_off.json)):
+
+#### Bảng chi tiết từng Video (5 Video nói tiếng Hàn sạch & 3 Video lỗi dữ liệu YODAS gốc)
+
+| Video ID | Thời lượng (Utts Ref) | `LoRA v5 Full` (`ctx_on`) <br> WER / CER / Segs / RTF | `LoRA v6` (`ctx_on`) <br> WER / CER / Segs / RTF | 🏆 `LoRA v6` (`ctx_off`) <br> WER / CER / Segs / RTF | Phân loại & Ghi chú |
+|---|---:|---|---|---|---|
+| `1NU2PHSyot0` | 134.2s (41) | 22.73% / 7.69% / 14 / 0.551 | 23.23% / 13.14% / 44 / 1.141 | **12.18% / 4.33% / 39 / 0.526** | Sạch — Đọc án lệ bảo hiểm |
+| `2_1RD3Yo1nA` | 67.3s (7) | **1.15% / 0.43% / 5 / 0.381** | 12.64% / 9.44% / 8 / 0.865 | 2.30% / 0.86% / 7 / 0.411 | Sạch — Tin tức giải trí |
+| `2jwkCBzthu8` | 298.7s (81) | 30.22% / 16.96% / 34 / 0.551 | 6.78% / 2.79% / 85 / 0.783 | **6.78% / 2.16% / 81 / 0.534** | Sạch — Án lệ ~5 phút (`v6` khớp `81/81` đoạn) |
+| `37NNBvgq4kA` | 355.7s (69) | 40.59% / 26.42% / 58 / 0.449 | 91.34% / 81.56% / 125 / 0.807 | **30.22% / 20.07% / 71 / 0.427** | Sạch — Vlog ~6 phút nhiều gió & khoảng lặng |
+| `448rztPRiAu` | 161.0s (34) | 66.30% / 19.12% / 8 / 0.642 | **17.67% / 2.72% / 37 / 0.783** | 18.66% / 3.34% / 32 / 0.678 | Sạch — Tin động đất (`v5` bỏ lọt 26 đoạn) |
+| `5HUBzh4_4MU` | 85.0s (16) | — | 321.31% / 576.64% / 19 / 1.382 | 244.26% / 456.93% / 20 / 0.299 | **Lỗi data gốc:** Audio nói tiếng Anh, phụ đề dịch tiếng Hàn |
+| `5YCAxKLkwUy` | 273.9s (27) | — | 193.75% / 153.81% / 65 / 0.937 | 167.71% / 133.63% / 47 / 0.816 | **Lỗi data gốc:** Phụ đề blog trên màn hình khác lời nói |
+| `6F57K2OKsYk` | 219.4s (30) | — | 100.00% / 96.28% / 44 / 0.550 | 197.63% / 154.53% / 22 / 1.563 | **Lỗi data gốc:** Video nhạc nền / slideshow không lời |
+
+#### Bảng tổng hợp Micro Corpus Long-Form & Short-Form giữ năng lực Song ngữ
+
+| Hạng mục Benchmark | Phạm vi mẫu đã đo | `LoRA v5 Full` | `LoRA v6` (`ctx_on`) | 🏆 `LoRA v6` (`ctx_off` / Short) | Peak VRAM |
+|---|---|---:|---:|---:|---:|
+| **Long-Form (5 video nói tiếng Hàn sạch)** | 16.95 phút (1,017.0s) | WER **37.21%** <br> CER **17.74%** <br> RTF **0.518** (`526.9s`) | WER **35.69%** <br> CER **25.40%** <br> RTF **0.844** (`858.7s`) | **WER 16.24%** *(-56.4% lỗi tương đối)* <br> **CER 7.39%** *(-58.3% lỗi tương đối)* <br> **RTF 0.510** (`519.0s`) | `3,912.6 MB` (`ctx_off`) <br> `4,007.4 MB` (`ctx_on`) |
+| **Long-Form (cả 8 video gồm 3 video lỗi YODAS)** | 26.59 phút (1,595.2s) | — | WER **68.39%** <br> CER **60.56%** <br> RTF **0.849** | WER **59.47%** <br> CER **47.99%** <br> RTF **0.696** | `3,912.6 MB` (`3.82 GB`) |
+| **Short-Form HiKE Code-Switching** | **321/321 mẫu** (38.1 phút) | WER **4.95%** <br> CER **2.68%** | — | **WER 5.37%** <br> **CER 3.43%** <br> **RTF 0.365** (`834.8s`) | `3,663.9 MB` |
+| **Short-Form Zeroth Korean Clean** | **446/446 mẫu** (69.7 phút) | WER **4.10%** <br> CER **1.62%** | — | **WER 4.20%** <br> **CER 1.63%** <br> **RTF 0.461** (`1,929.1s`) | `3,663.9 MB` |
+| **Short-Form LibriSpeech English Clean** | **500/500 mẫu** (62.6 phút) | WER **2.94%** <br> CER **0.99%** | — | **WER 2.85%** <br> **CER 1.01%** <br> **RTF 0.565** (`2,121.1s`) | `3,665.0 MB` |
+| **Short-Form Weighted Average Overall** | **1,267/1,267 mẫu** (2.84 giờ) | WER **3.86%** <br> CER **1.63%** | — | **WER 3.96%** <br> **CER 1.84%** <br> **RTF 0.478** | `3,665.0 MB` |
+
+> [!NOTE]
+> * Trên audio dài liên tục có nhiều khoảng lặng hoặc tạp âm, bật `condition_on_prev_tokens=True` dễ khuếch đại vòng lặp sang cửa sổ kế tiếp qua `<|startofprev|>`, khiến thời gian chạy tăng lên `RTF 0.844` và WER tăng; trong khi chạy **`condition_on_prev_tokens=False`** tận dụng năng lực phân đoạn timestamp của `LoRA v6` giúp giảm lỗi từ 37.21% (`LoRA v5`) xuống **16.24%** và chạy nhanh hơn gần 2 lần thời gian thực (`RTF 0.510`, `3.82 GB VRAM`).
+> * Toàn bộ benchmark Short-Form **1,267/1,267 mẫu** của `LoRA v6` ([`benchmark_lora_v6_short_results.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_lora_v6_short_results.json)) hoàn tất với **3.96% WER / 1.84% CER** (chênh chỉ 0.10% WER so với `LoRA v5 Full`), chứng minh `LoRA v6` không bị quên kiến thức ngắn.
+
+---
+
+## 14. Giải pháp Long-Form 5+ phút (`vad_split`), Lọc dữ liệu YODAS Tier-2 & `LoRA v6.1`
+
+### 14.1 Lọc dữ liệu YODAS Tier-2 & Sửa lỗi Pipeline huấn luyện
+
+Qua kiểm định chéo audio–text bằng GPU ([`scripts/filter_yodas_long_videos.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/scripts/filter_yodas_long_videos.py)) trên toàn bộ **2,520 video** của `yodas-ko-200h-v1` (2 mẫu đại diện/video, `batch_size=32`, [`yodas_v2_video_qc.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_v2_video_qc.json)):
+
+* **Phát hiện tỷ lệ nhiễu gốc lớn:** Trong số 1,099 video bị cờ thô ban đầu, giữ lại lọc nghiêm ngặt các video có `min_cer >= 0.40` ([`yodas_v2_video_qc_strict.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_v2_video_qc_strict.json)) đã cách ly đúng **994/2,520 video (~39.4%)** không có lời thoại tiếng Hàn khớp phụ đề (`train: 898`, `dev: 44`, `test: 52` — gồm video nói tiếng Anh gắn phụ đề dịch Hàn, nhạc nền BGM/slideshow hoặc chữ blog phủ màn hình).
+* **Tái đóng gói dữ liệu sạch:**
+  * [`yodas_long_windows_clean_v2.train.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_windows_clean_v2.train.jsonl): **21,171 cửa sổ đa câu** (**154.27 giờ**, **1,310 video >=45s**, trung bình `26.23s` & `6.57` câu/cửa sổ, `19,871` cửa sổ có `<|startofprev|>`).
+  * [`yodas_long_v1_clean.test.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_v1_clean.test.jsonl): **71/123 video sạch** (**64 video >30s**, **8.21 giờ**; **39 video >=280s (~5+ phút)**, tổng `424.2` phút).
+* **Các lỗi pipeline đã vá trước khi train `LoRA v6.1`:**
+  1. [`src/training/data_collator.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/training/data_collator.py): Sửa lỗi chèn trùng hai lần `<|startoftranscript|>` (`50258, 50258`) khi chuẩn bị `decoder_input_ids` cho chuỗi short-form.
+  2. [`src/training/manifest_dataset.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/training/manifest_dataset.py): Thay khoảng lặng `np.zeros` tuyệt đối giữa các câu YODAS bằng nhiễu nền nhẹ (~`-58 dBFS`), thêm tùy chọn `--yodas-loanwords-prob`, `--yodas-min-window-sec`, `--yodas-min-segments`.
+
+### 14.2 Kiến trúc Silence/VAD Utterance-Split (`vad_split`) cho Video 5–10+ phút
+
+Thay vì cắt cứng theo cửa sổ `30.0s` của Hugging Face `seek` (dễ cắt ngang chữ và lọt khoảng lặng gây lặp câu), [`src/evaluation/buzzasr_runner.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/evaluation/buzzasr_runner.py) triển khai pipeline **`vad_split`** (bật mặc định cho audio >30s qua `transcribe_file` / `transcribe_audio_array` và [`app.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/app.py)):
+
+1. **`segment_audio_by_silence`**: Tính RMS theo khung `20ms` với ngưỡng thích nghi theo noise floor (`p10`) & speech peak (`p95`), gộp khoảng ngắt `< 0.35s`, bỏ qua khoảng lặng dài, tách tại đáy năng lượng thấp nhất nếu đoạn nói liền vượt ngưỡng và đóng gói thành các chunk sạch **`target_max_sec = 18.0s` (`hard_max_sec = 26.0s`)**.
+2. **`_transcribe_vad_split`**: Decode từng chunk bằng nhánh short-form đơn cửa sổ với `max_tokens_cap = 280`, **`no_repeat_ngram_size = 6`, `repetition_penalty = 1.05`** (tránh lỗi `no_repeat_ngram_size=3, repetition_penalty=1.2` ép đổi âm danh từ lặp lại như `봄동 -> 봄돈`, `캠핑 -> 캠킹`), hậu kiểm `_sanitize_chunk_repetition` (gỡ lặp 3+ lần, chuẩn dấu cách sau `.!?`), rồi ghép thành văn bản chung + mảng `segments` có timestamp `[start_sec, end_sec]`.
+
+### 14.3 Kết quả Huấn luyện & Nghiệm thu `LoRA v6.1` + Đối chứng `LoRA v5 Full`
+
+* **Huấn luyện `LoRA v6.1`** ([`buzzasr_lora_v6_1_long`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_1_long)): Khởi tạo từ `LoRA v6/final`, `1,200` steps (`3h 58m`, `lr=3e-5`, mix `45% YODAS clean >=15s / 14% KO / 12% EN / 14% HiKE CS / 15% Syn CS`, `train_loss = 1.372`, `eval_loss = 0.1349–0.1379`).
+* **Short-Form 1,267 mẫu ([`benchmark_lora_v6_1_short_results.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_lora_v6_1_short_results.json)):** **HiKE CS 5.11% WER / 2.89% CER**, **Zeroth KO 4.20% WER / 1.86% CER**, **LibriSpeech EN 2.89% WER / 1.01% CER** $\rightarrow$ **Weighted Average: 3.91% WER / 1.79% CER (Acc 96.09%, RTF 0.474)** — vượt `LoRA v6` (`3.96%` WER).
+* **Long-Form `vad_split` trên bộ video 5–10 phút ([`benchmark_longform_v6_1_vad_5to10min.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v6_1_vad_5to10min.json) & [`benchmark_longform_v5_vad2_5to10min.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v5_vad2_5to10min.json)):**
+
+| Video ID | Thời lượng | Đặc điểm nội dung | `LoRA v6` (`vad_split`) <br> WER / CER | **`LoRA v6.1` (`vad_split`)** <br> WER / CER / RTF | `LoRA v5 Full` (`vad_split v2`) <br> WER / CER / RTF |
+|---|---:|---|---:|---:|---:|
+| `2_1RD3Yo1nA` | 67.3s | Tin tức giải trí chuẩn | 5.75% / 2.15% | **4.60% / 2.15%** *(clean5)* | 11.49% / 5.15% *(v1)* |
+| `1NU2PHSyot0` | 134.2s | Án lệ bảo hiểm đọc rõ | 9.14% / 3.85% | **8.12% / 3.21%** *(clean5)* | 27.92% / 8.81% *(v1)* |
+| `2jwkCBzthu8` | **298.7s (5.0m)** | Án lệ dài 5 phút (18 chunks) | **7.89% / 2.72%** | **8.10% / 2.72% / 0.468** | 22.03% / 7.47% / 0.474 |
+| `3pNXi2QbNec` | **567.2s (9.5m)** | Thuyết minh/đọc chuẩn (36 chunks) | — | **7.61% / 3.44% / 0.494** | 23.15% / 8.76% / 0.516 |
+| `4RR7NBIs1Zc` | **582.2s (9.7m)** | Giới thiệu địa điểm (39 chunks) | — | **17.68% / 5.60%** / 0.553 | 28.92% / 11.42% / 0.550 |
+| `9ZlBLH7Q19u` | 462.6s (7.7m) | Giảng golf khẩu ngữ lặp tự nhiên | — | 26.06% / 18.15% / 0.410 | **13.10% / 7.88% / 0.405** |
+| `37NNBvgq4kA` | 355.7s (5.9m) | Vlog ngoài trời gió mạnh (`vad_cov=88%`) | 30.85% / 20.41% | **33.75%** / 23.93% / 0.281 | 34.48% / **20.93%** / 0.302 |
+| `9c5RQyy63FU` | 482.0s (8.0m) | Vlog 2 người + sub mô tả cảnh `(...)` | — | **48.92% / 38.23%** / 0.293 | 53.16% / 54.86% / 0.378 |
+| **Micro Corpus (6 video 5–10m)** | **45.81 phút** | Tổng hợp 6 video trên | — | **22.34% / 12.76% / 0.427** | 27.69% / 15.91% / 0.448 |
+
+> [!IMPORTANT]
+> * **Khuyến nghị vận hành trên [`app.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/app.py) (`lora_v6_1` mặc định + `vad_split`):**
+>   * Dùng **`LoRA v6.1` + `vad_split`** cho nội dung chuẩn (tin tức, pháp lý/án lệ, bài giảng chuẩn, số má, Code-Switching Hàn – Anh): đạt **~7.6%–8.1% WER (`2.7%–3.4%` CER)** trên cả video dài **5–9.5 phút**, giữ **3.91% WER** Short-Form.
+>   * Dùng **`LoRA v5 Full` + `vad_split`** (có sẵn trong dropdown giao diện Web Studio) khi cần chép **nguyên văn 100% khẩu ngữ đời thường lặp từ** như talkshow/huấn luyện tự do (`9ZlBLH7Q19u`: **13.10% WER** vs `26.06%` của `v6.1`, do `v6/v6.1` học từ phụ đề YouTube biên tập sẵn hay rút gọn câu lặp).
+> * Đã kiểm chứng smoke-test `app.get_asr_runner("lora_v6_1")` trên video 5 phút `2jwkCBzthu8`: `is_long_form=True`, `longform_mode="vad_split"`, `18` segments, `RTF=0.435` (`APP SMOKE CHECK PASSED`).
+
+---
+
+## 15. Đóng gói Nghiệm thu Hệ thống (Cặp `LoRA v6.1 + LoRA v5 Full + vad_split`) & Lộ trình `LoRA v6.2`
+
+### 15.1 Tổng kết Tiến hóa Toàn bộ các Phiên bản Mô hình
+
+| Phiên bản | Dữ liệu & Điểm nhấn | Short-Form Overall (1,267 mẫu) <br> WER / CER (HiKE / KO / EN) | Long-Form 5–10m (`vad_split v2`, 6 video) <br> Micro WER / CER | Vai trò Triển khai |
+|---|---|---:|---:|---|
+| **BuzzASR Base** | Pretrained gốc `BuzzASR/korean` | HiKE **53.30%** WER | — | Baseline ban đầu |
+| **LoRA v5 Full** | 54,595 câu ngắn sạch + 592 Loanwords (`train` đầy đủ) | **3.86% / 1.63%** *(4.95% / 4.10% / 2.94%)* | 27.69% / 15.91% <br>*(Tốt nhất khẩu ngữ lặp `9ZlBLH7Q19u`: **13.10% / 7.88%**)* | **Chuyên chép nguyên văn 100% (verbatim)** & Short-Form |
+| **LoRA v6** | Warm-start YODAS thô (800 steps, `ctx_off`) | 3.96% / 1.84% *(5.37% / 4.20% / 2.85%)* | — *(5 clean native `ctx_off`: 16.24% / 7.39%)* | Bản thử nghiệm Long-Form đầu tiên |
+| 🏆 **LoRA v6.1** | Warm-start trên YODAS sạch Tier-2 (21,171 windows / 154.27h, fix double BOS & gap noise, 1,200 steps) | **3.91% / 1.79%** *(5.11% / 4.20% / 2.89%)* | **22.34% / 12.76%** <br>*(Chuẩn 5–9.5m: **7.61%–8.10% / 2.72%–3.44%**)* | **Mặc định trên Web UI** cho đa số bài toán Short + Long |
+
+### 15.2 Hướng dẫn Vận hành Gói Đóng gói Hiện tại (`Production Ready`)
+
+* **Khởi chạy Web Studio:** Chạy `.\.venv\Scripts\python.exe app.py` (cổng `http://localhost:7860`, giới hạn upload `256 MB` qua [app.py](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/app.py), giao diện chọn model tại [index.html](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/ui/index.html#L57-L61)).
+* **Cơ chế `vad_split` tự động ([buzzasr_runner.py](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/evaluation/buzzasr_runner.py)):** Mọi file audio >30 giây đưa vào `transcribe_file` / `transcribe_audio_array` đều tự động tách tại khoảng lặng/đáy năng lượng (`target_max_sec=18.0s`, `hard_max_sec=26.0s`), giải mã bằng `no_repeat_ngram_size=6, repetition_penalty=1.05`, hậu kiểm lặp `_sanitize_chunk_repetition`, và trả về cả văn bản ghép hoàn chỉnh lẫn `segments` bấm tua theo timestamp.
+* **Quy tắc chọn nhanh giữa 2 adapter trong cặp đóng gói:**
+  1. **`LoRA v6.1` (Mặc định):** Hội thảo, tin tức, tài liệu/án lệ pháp lý, bài giảng chuẩn, câu có số liệu/tên riêng & trộn Hàn – Anh.
+  2. **`LoRA v5 Full`:** Ghi âm hội thoại đời thường, talkshow/vlog giảng giải ngẫu hứng nói lặp từ nhiều và cần **chép nguyên văn từng từ**.
+
+### 15.3 Kế hoạch Dữ liệu cho Bước Tiếp theo (`LoRA v6.2` Verbatim Long-Audio)
+
+Để hợp nhất điểm mạnh của `v5 Full` (chép nguyên văn không rút gọn) và `v6.1` (đọc chuẩn số liệu & nhịp dài 5–10+ phút) vào một mô hình duy nhất:
+1. **Lọc gắt YODAS Verbatim-Only:** Nâng ngưỡng lọc từ `avg_cer >= 0.70` lên **chỉ giữ các video có `avg_cer <= 0.18–0.22` (theo `LoRA v5 Full`) và tỷ lệ độ dài `0.88 <= len(pred)/len(ref) <= 1.12`**, loại triệt để các video phụ đề biên tập tóm ý và các dòng mô tả cảnh `(...)`.
+2. **Tổng hợp Long-Audio Verbatim đa ngôn ngữ (`20–28s`):** Nối nhiều câu ngắn chuẩn từ **Zeroth Korean + HiKE CS + LibriSpeech** kèm khoảng nghỉ nhiễu nền nhẹ (`-55 dBFS`) để tạo thêm chuỗi dài giàu Code-Switching Hàn – Anh nhưng vẫn đảm bảo khớp nguyên văn 100%.
+
+### 15.4 Nghiệm thu Chính thức Bộ Test Long-Audio Nhãn Chuẩn (`Gold-16`, 79.79 phút)
+
+* **Bộ test chuẩn:** [`artifacts/manifests/yodas_long_gold_v1.test.jsonl`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/manifests/yodas_long_gold_v1.test.jsonl) gồm **16 video dài 2.5–9.5 phút (tổng `79.79` phút)** lọc theo tiêu chí sạch nhãn khách quan (`0` video lỗi QC Tier-2, `0` chú thích cảnh `(...)`/`[...]`, `0` ký tự nhạc `♪`/`♬` hay jamo `ㅎㅎㅎ`, mật độ thoại `3.8 <= chars/sec <= 6.2`).
+* **Kết quả `LoRA v6.1` (`vad_split`, [`benchmark_longform_v6_1_gold16.json`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/benchmark_longform_v6_1_gold16.json)):**
+  * **Toàn bộ 16/16 video (`79.79` phút):** **Corpus WER `14.33%` | Corpus CER `7.32%`** *(Macro `17.01%` / `8.81%`, RTF `0.471`, Peak VRAM `3,663.9 MB`)*.
+  * **13/16 video khớp lời thoại chuẩn (`67.1` phút):** **Corpus WER `9.43%` | Corpus CER `3.64%`** (tiêu biểu: `_g-Uqd-cKc0` 6.6m đạt **5.27% WER / 2.77% CER**, `jK15JV9pZ14` 4.0m đạt **6.81% WER / 1.86% CER**, `3pNXi2QbNec` 9.5m đạt **7.61% WER / 3.44% CER**, `2jwkCBzthu8` 5.0m đạt **8.10% WER / 2.72% CER**).
+* **Checkpoint tốt nhất đề xuất bàn giao:** [`artifacts/checkpoints/buzzasr_lora_v6_1_long/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_1_long/final) (`443.90 MB`, chạy kèm `vad_split` trong [`buzzasr_runner.py`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/src/evaluation/buzzasr_runner.py)).
+
+

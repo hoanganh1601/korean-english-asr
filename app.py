@@ -33,7 +33,7 @@ from aiohttp import web
 
 # Global runner instance & Manifest Index
 runner_instance = None
-current_model_mode = "lora_v5"  # "lora_v5", "lora_v4", "lora_v3", or "base"
+current_model_mode = "lora_v6"  # "lora_v6", "lora_v5", "lora_v4", "lora_v3", or "base"
 MANIFEST_LOOKUP: Dict[str, Dict[str, str]] = {}
 
 
@@ -337,14 +337,22 @@ def analyze_errors(ref_raw: str, pred_raw: str) -> Dict[str, Any]:
     }
 
 
-def get_asr_runner(mode="lora_v5"):
+def get_asr_runner(mode="lora_v6_1"):
     global runner_instance, current_model_mode
     if runner_instance is not None and current_model_mode == mode:
         return runner_instance
 
     from src.evaluation.buzzasr_runner import WhisperASRRunner
 
-    if mode == "lora_v5":
+    if mode == "lora_v6_1":
+        adapter = "artifacts/checkpoints/buzzasr_lora_v6_1_long/final"
+        if not (PROJECT_ROOT / adapter).exists():
+            adapter = "artifacts/checkpoints/buzzasr_lora_v6_long/final"
+    elif mode == "lora_v6":
+        adapter = "artifacts/checkpoints/buzzasr_lora_v6_long/final"
+        if not (PROJECT_ROOT / adapter).exists():
+            adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
+    elif mode == "lora_v5":
         adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
         if not (PROJECT_ROOT / adapter).exists():
             adapter = "artifacts/checkpoints/buzzasr_lora_v4/final"
@@ -441,7 +449,7 @@ async def handle_transcribe(request):
     audio_bytes = None
     filename = "uploaded_audio.wav"
     ref_text = ""
-    model_mode = "lora_v5"
+    model_mode = "lora_v6_1"
 
     while True:
         part = await reader.next()
@@ -486,6 +494,9 @@ async def handle_transcribe(request):
 
     return web.json_response({
         "transcription": pred_text,
+        "segments": trans_result.get("segments", []),
+        "is_long_form": bool(trans_result.get("is_long_form", False)),
+        "longform_mode": trans_result.get("longform_mode", "short"),
         "reference_text": ref_text,
         "inference_time_sec": trans_result["inference_time_sec"],
         "audio_duration_sec": trans_result["audio_duration_sec"],
@@ -497,7 +508,7 @@ async def handle_transcribe(request):
 
 
 def create_app():
-    app = web.Application(client_max_size=100 * 1024 * 1024)
+    app = web.Application(client_max_size=256 * 1024 * 1024)
     app.router.add_get("/", handle_index)
     app.router.add_get("/api/samples", handle_get_samples)
     app.router.add_get("/api/audio/{filename}", handle_serve_audio)
@@ -542,7 +553,7 @@ def main():
     # Preload & Warm up ASR model by default so inference is immediate
     if not args.no_preload:
         print("⚡ Preloading & Warming up ASR model on GPU for ultra-fast response...")
-        get_asr_runner("lora_v5")
+        get_asr_runner("lora_v6")
 
     app = create_app()
     print(f"\n=======================================================")

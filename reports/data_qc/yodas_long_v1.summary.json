@@ -1,0 +1,16 @@
+{
+  "train_windows": {
+    "split": "train_windows",
+    "num_videos": 1310,
+    "skipped_videos": 967,
+    "skipped_short_windows": 896,
+    "skipped_bad_utts": 2339,
+    "num_windows": 21171,
+    "total_utterances_packed": 139097,
+    "total_hours": 154.2742,
+    "avg_window_duration_sec": 26.23,
+    "avg_utterances_per_window": 6.57,
+    "windows_with_prev_context": 19871,
+    "elapsed_sec": 7.42
+  }
+}

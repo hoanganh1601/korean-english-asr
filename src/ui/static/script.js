@@ -65,6 +65,53 @@ document.addEventListener("DOMContentLoaded", () => {
     updateWordCounts();
 });
 
+function formatTimestamp(sec) {
+    const total = Math.max(0, Math.floor(sec));
+    const mins = Math.floor(total / 60);
+    const secs = total % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function renderLongformSegments(segments) {
+    const panel = document.getElementById("longformSegmentsPanel");
+    const list = document.getElementById("segmentsTimelineList");
+    const countEl = document.getElementById("segmentCount");
+    if (!panel || !list || !countEl) return;
+
+    list.innerHTML = "";
+    if (!segments || segments.length === 0) {
+        panel.style.display = "none";
+        countEl.textContent = "0";
+        return;
+    }
+
+    countEl.textContent = String(segments.length);
+    for (const seg of segments) {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex; gap:10px; align-items:flex-start; padding:5px 8px; border-radius:6px; background:rgba(255,255,255,0.03);";
+
+        const badge = document.createElement("button");
+        badge.type = "button";
+        badge.textContent = `${formatTimestamp(seg.start_sec)} - ${formatTimestamp(seg.end_sec)}`;
+        badge.style.cssText = "flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:0.78rem; padding:2px 7px; border-radius:4px; border:1px solid rgba(99,102,241,0.4); background:rgba(99,102,241,0.16); color:#a5b4fc; cursor:pointer;";
+        badge.addEventListener("click", () => {
+            if (audioPlayer && !Number.isNaN(seg.start_sec)) {
+                audioPlayer.currentTime = seg.start_sec;
+                audioPlayer.play().catch(() => {});
+            }
+        });
+
+        const txt = document.createElement("span");
+        txt.textContent = seg.text || "";
+        txt.style.lineHeight = "1.4";
+
+        row.appendChild(badge);
+        row.appendChild(txt);
+        list.appendChild(row);
+    }
+    panel.style.display = "block";
+}
+
 function showToast(msg, duration = 3000) {
     toast.textContent = msg;
     toast.style.display = "block";
@@ -73,16 +120,18 @@ function showToast(msg, duration = 3000) {
     }, duration);
 }
 
+const MODEL_LABELS = {
+    lora_v6: "BuzzASR + LoRA v6 Long-Form",
+    lora_v5: "BuzzASR + LoRA v5 Full",
+    lora_v4: "BuzzASR + LoRA v4",
+    lora_v3: "BuzzASR + LoRA v3",
+    base: "BuzzASR Base"
+};
+
 // Model Selection handler
 modelModeSelect.addEventListener("change", (e) => {
     const mode = e.target.value;
-    if (mode === "lora_v4") {
-        modelLabel.textContent = "BuzzASR + LoRA v4";
-    } else if (mode === "lora_v3") {
-        modelLabel.textContent = "BuzzASR + LoRA v3";
-    } else {
-        modelLabel.textContent = "BuzzASR Base";
-    }
+    modelLabel.textContent = MODEL_LABELS[mode] || "BuzzASR Base";
 });
 
 // Dropzone & File Upload
@@ -306,6 +355,7 @@ async function runTranscription() {
 
         const data = await response.json();
         predTextarea.value = data.transcription;
+        renderLongformSegments(data.segments || []);
 
         // Auto populate Real Text if returned from server lookup and textarea was empty
         if (!refTextarea.value.trim() && data.reference_text) {
