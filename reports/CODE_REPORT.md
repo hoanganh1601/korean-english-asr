@@ -10,9 +10,8 @@
 * **Mô hình nền (Base Model):** `BuzzASR/korean` (kiến trúc Whisper Large, ~1.55 tỷ tham số, 32 lớp Encoder / 32 lớp Decoder).
 * **Phương pháp tinh chỉnh:** LoRA PEFT (`r=64`, `lora_alpha=128`, `lora_dropout=0.05`) gắn trên 6 ma trận (`q_proj`, `k_proj`, `v_proj`, `out_proj`, `fc1`, `fc2`), tổng **115,343,360** tham số huấn luyện (**6.95%** toàn bộ mô hình).
 * **Giải mã song ngữ tự do:** Tắt ép ngôn ngữ (`forced_decoder_ids=None`, `suppress_tokens=[]`) để mô hình xuất đồng thời chữ Hangul và chữ Latin trong câu Code-Switching, đồng thời cấu hình `prev_sot_token_id=50362` (`<|startofprev|>`).
-* **Cặp Adapter đang sử dụng linh hoạt trên Web Studio (`app.py`):**
-  1. **`LoRA v6.1 Long-Form` (Mặc định chính thức):** [`artifacts/checkpoints/buzzasr_lora_v6_1_long/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_1_long/final) — tối ưu cho video dài 5–10+ phút, nội dung đọc chuẩn, tin tức, pháp lý/án lệ, số liệu & Code-Switching Hàn – Anh.
-  2. **`LoRA v5 Full` (Bản dự phòng chuyên Verbatim):** [`artifacts/checkpoints/buzzasr_lora_v5_full/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v5_full/final) — tối ưu cho câu ngắn Short-Form và video khẩu ngữ tự do nói lặp từ nhiều cần chép nguyên văn 100%.
+* **Adapter chính thức duy nhất được giữ lại & push lên GitHub (Git LFS):**
+  * **`LoRA v6.1 Long-Form` (`final/`):** [`artifacts/checkpoints/buzzasr_lora_v6_1_long/final`](file:///c:/Users/Admin/Desktop/lab/korean-english-asr/artifacts/checkpoints/buzzasr_lora_v6_1_long/final) (`adapter_model.safetensors` `440.14 MB` / `462 MB` trên Git LFS). *(Các phiên bản cũ `v1`–`v6` đã được dọn bỏ khỏi nhánh `code` và ổ đĩa; base model `BuzzASR/korean` tự động tải từ HuggingFace Hub khi chạy).*
 
 ---
 

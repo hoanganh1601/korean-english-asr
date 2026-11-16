@@ -346,22 +346,6 @@ def get_asr_runner(mode="lora_v6_1"):
 
     if mode == "lora_v6_1":
         adapter = "artifacts/checkpoints/buzzasr_lora_v6_1_long/final"
-        if not (PROJECT_ROOT / adapter).exists():
-            adapter = "artifacts/checkpoints/buzzasr_lora_v6_long/final"
-    elif mode == "lora_v6":
-        adapter = "artifacts/checkpoints/buzzasr_lora_v6_long/final"
-        if not (PROJECT_ROOT / adapter).exists():
-            adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
-    elif mode == "lora_v5":
-        adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
-        if not (PROJECT_ROOT / adapter).exists():
-            adapter = "artifacts/checkpoints/buzzasr_lora_v4/final"
-    elif mode == "lora_v4":
-        adapter = "artifacts/checkpoints/buzzasr_lora_v4/final"
-        if not (PROJECT_ROOT / adapter).exists():
-            adapter = "artifacts/checkpoints/buzzasr_lora_v3/final"
-    elif mode == "lora_v3":
-        adapter = "artifacts/checkpoints/buzzasr_lora_v3/final"
     else:
         adapter = None
 
