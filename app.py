@@ -346,6 +346,8 @@ def get_asr_runner(mode="lora_v6_1"):
 
     if mode == "lora_v6_1":
         adapter = "artifacts/checkpoints/buzzasr_lora_v6_1_long/final"
+    elif mode == "lora_v5":
+        adapter = "artifacts/checkpoints/buzzasr_lora_v5_full/final"
     else:
         adapter = None
 

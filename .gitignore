@@ -21,6 +21,7 @@ wandb/
 *.pth
 *.bin
 *.safetensors
+!artifacts/checkpoints/buzzasr_lora_v5_full/final/adapter_model.safetensors
 !artifacts/checkpoints/buzzasr_lora_v6_1_long/final/adapter_model.safetensors
 
 # Audio/video
